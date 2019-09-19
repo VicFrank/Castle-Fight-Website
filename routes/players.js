@@ -3,6 +3,18 @@ const router = express.Router();
 const games = require("../db/games");
 const players = require("../db/players");
 
+router.get("/", async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 100;
+    const offset = parseInt(req.query.offset) || 0;
+    const playersData = await players.getAllPlayers(limit, offset);
+    res.status(200).json(playersData);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Server Error" });
+  }
+});
+
 router.get("/player/:steamid", async (req, res) => {
   try {
     const steamid = req.params.steamid;

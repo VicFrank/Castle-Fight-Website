@@ -33,7 +33,7 @@ router.post("/", async (req, res) => {
       ? keys.dedicatedServerKey
       : keys.toolsKey;
 
-    console.log(req.body);
+    console.log(server_key);
 
     if (server_key != dedicatedServerKey) {
       res.status(403).send({ message: `You are not authorized to add data` });

@@ -6,6 +6,19 @@ const { query } = require("./index");
 */
 
 module.exports = {
+  async getAllPlayers(limit = 100, offset = 0) {
+    try {
+      console.log(limit, offset);
+      const sql_query = `
+        SELECT * FROM PLAYERS
+        LIMIT $1 OFFSET $2
+      `;
+      const { rows } = await query(sql_query, [limit, offset]);
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  },
   async findPlayerBySteamID(steamID) {
     try {
       const sql_query = `
