@@ -90,4 +90,14 @@ router.get("/records/all_building_counts", async (req, res) => {
   }
 });
 
+router.get("/records/races", async (req, res) => {
+  try {
+    const rows = await games.getRaceCounts();
+    res.status(200).json(rows);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Server Error" });
+  }
+});
+
 module.exports = router;

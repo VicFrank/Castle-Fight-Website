@@ -158,7 +158,9 @@ module.exports = {
       const sql_query = `
       SELECT build_order[1].building, count(*)
         FROM round_players
+        WHERE round_players.player_id IS NOT NULL
         GROUP BY build_order[1].building
+        ORDER BY count DESC
       `;
       const { rows } = await query(sql_query);
       return rows;
@@ -172,7 +174,9 @@ module.exports = {
       SELECT bo.building, count(*)
         FROM round_players,
         unnest(round_players.build_order) bo
+        WHERE round_players.player_id IS NOT NULL
         GROUP BY bo.building
+        ORDER BY count DESC
       `;
       const { rows } = await query(sql_query);
       return rows;
@@ -182,12 +186,28 @@ module.exports = {
   },
   async getGames(limit = 100, offset = 0) {
     try {
-      console.log(limit, offset);
       const sql_query = `
         SELECT * FROM GAMES ORDER BY created_at
         LIMIT $1 OFFSET $2
       `;
       const { rows } = await query(sql_query, [limit, offset]);
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  },
+  async getRaceCounts() {
+    try {
+      const sql_query = `
+      SELECT race, count(*)
+        FROM games
+        JOIN round_players
+        ON games.game_id = round_players.game_id
+		    WHERE round_players.player_id IS NOT NULL
+        GROUP BY race
+		    ORDER BY count DESC;
+      `;
+      const { rows } = await query(sql_query);
       return rows;
     } catch (error) {
       throw error;
