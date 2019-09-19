@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const games = require("../db/games");
+const keys = require("../config/keys");
 
 router.get("/", async (req, res) => {
   try {
@@ -27,8 +28,17 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const { server_key, data } = req.body;
-    // TODO: Authenticate the server key
-    console.log(server_key);
+
+    const dedicatedServerKey = process.env.IS_PRODUCTION
+      ? keys.dedicatedServerKey
+      : keys.toolsKey;
+
+    console.log(req.body);
+
+    if (server_key != dedicatedServerKey) {
+      res.status(403).send({ message: `You are not authorized to add data` });
+      return;
+    }
     const parsedData = JSON.parse(data);
     const insertedGameID = await games.create(parsedData);
     res.status(201).send({ message: `Created game with ID ${insertedGameID}` });
