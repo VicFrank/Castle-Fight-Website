@@ -113,21 +113,29 @@ module.exports = {
     }
   },
   async findRoundsByGameID(gameID) {
-    const { rows } = await query(
-      `SELECT *
-        FROM rounds
-        WHERE game_id = $1`,
-      [gameID]
-    );
-    const { playerRows } = await query(
-      `SELECT *
-        FROM round_players
-        WHERE game_id = $1`,
-      [gameID]
-    );
-    console.log(rows, playerRows);
+    try {
+      const { rows } = await query(
+        `SELECT *
+          FROM rounds
+          WHERE game_id = $1`,
+        [gameID]
+      );
+      const { rows: playerRows } = await query(
+        `SELECT *
+          FROM round_players
+          WHERE game_id = $1`,
+        [gameID]
+      );
+      const result = {
+        ...rows[0],
+        players: playerRows
+      };
+      return result;
+    } catch (error) {
+      throw error;
+    }
   },
-  async findGamesBySteamID(steamID) {
+  async findGamesBySteamID(steamID, limit = 100, offset = 0) {
     try {
       const sql_query = `
       SELECT games.*
@@ -136,23 +144,66 @@ module.exports = {
         ON game_players.game_id = games.game_id
         JOIN players
         ON players.player_id = game_players.player_id
-        WHERE players.steam_id = $1;
+        WHERE players.steam_id = $1
+        LIMIT $2 OFFSET $3;
       `;
-      const { rows } = await query(sql_query, [steamID]);
+      const { rows } = await query(sql_query, [steamID, limit, offset]);
       return rows;
     } catch (error) {
       throw error;
     }
   },
-  async findPlayerBySteamID(steamID) {
+  async getFirstBuildingCounts() {
     try {
       const sql_query = `
-      SELECT *
-        FROM players
-        WHERE players.steam_id = $1;
+      SELECT build_order[1].building, count(*)
+        FROM round_players
+        GROUP BY build_order[1].building
       `;
-      const { rows } = await query(sql_query, [steamID]);
-      return rows[0];
+      const { rows } = await query(sql_query);
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  },
+  async getBuildingCounts() {
+    try {
+      const sql_query = `
+      SELECT bo.building, count(*)
+        FROM round_players,
+        unnest(round_players.build_order) bo
+        GROUP BY bo.building
+      `;
+      const { rows } = await query(sql_query);
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  },
+  async getGames(limit = 100, offset = 0) {
+    try {
+      console.log(limit, offset);
+      const sql_query = `
+        SELECT * FROM GAMES ORDER BY created_at
+        LIMIT $1 OFFSET $2
+      `;
+      const { rows } = await query(sql_query, [limit, offset]);
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  },
+  async findGamesInPastXHours(hours, limit = 100, offset = 0) {
+    try {
+      console.log(hours);
+      const sql_query = `
+        SELECT * FROM GAMES
+        WHERE created_at >= NOW() - $1 * INTERVAL '1 HOURS'
+        ORDER BY created_at
+        LIMIT $2 OFFSET $3
+      `;
+      const { rows } = await query(sql_query, [hours, limit, offset]);
+      return rows;
     } catch (error) {
       throw error;
     }

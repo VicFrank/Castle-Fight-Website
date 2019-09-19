@@ -2,7 +2,8 @@ const { Pool } = require("pg");
 const types = require("pg").types;
 
 // select typname, oid, typarray from pg_type where typname = '_build_event' order by oid
-const build_event_oid = 25164;
+// this needs to be updated every time the schema changes
+const build_event_oid = 25512;
 const parseBuildEvent = val => {
   // parse string of form {"('Barracks',3)","('Stronghold',33)"}
   // into javascript array of objects of form
