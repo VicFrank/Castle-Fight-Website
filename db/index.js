@@ -1,5 +1,6 @@
 const { Pool } = require("pg");
 const types = require("pg").types;
+const keys = require("../config/keys");
 
 // select typname, oid, typarray from pg_type where typname = '_build_event' order by oid
 // this needs to be updated every time the schema changes
@@ -31,13 +32,11 @@ const parseBuildEvent = val => {
 };
 types.setTypeParser(build_event_oid, parseBuildEvent);
 
-const pool = new Pool({
-  user: "me",
-  host: "localhost",
-  database: "castlefight",
-  password: "password",
-  port: 5432
-});
+const poolValues = process.env.IS_PRODUCTION
+  ? keys.sql.production
+  : keys.sql.dev;
+
+const pool = new Pool(poolValues);
 
 module.exports = {
   query: (text, params, callback) => {
