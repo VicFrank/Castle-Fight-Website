@@ -22,9 +22,12 @@ module.exports = {
   async findPlayerBySteamID(steamID) {
     try {
       const sql_query = `
-      SELECT *
-        FROM players
-        WHERE steam_id = $1;
+      SELECT steam_id, mmr, username, profile_picture, count(*) as numGames
+        FROM players as p
+        JOIN game_players as gp
+        ON p.player_id = gp.player_id
+        WHERE p.steam_id = $1;
+        GROUP BY p.player_id
       `;
       const { rows } = await query(sql_query, [steamID]);
       return rows[0];

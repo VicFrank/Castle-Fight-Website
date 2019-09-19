@@ -70,7 +70,7 @@ router.get("/:gameid/rounds", async (req, res) => {
   }
 });
 
-router.get("/first_building_counts", async (req, res) => {
+router.get("/records/first_building_counts", async (req, res) => {
   try {
     const gameInfo = await games.getFirstBuildingCounts();
     res.status(200).json(gameInfo);
@@ -80,7 +80,7 @@ router.get("/first_building_counts", async (req, res) => {
   }
 });
 
-router.get("/all_building_counts", async (req, res) => {
+router.get("/records/all_building_counts", async (req, res) => {
   try {
     const gameInfo = await games.getBuildingCounts();
     res.status(200).json(gameInfo);
