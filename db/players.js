@@ -10,7 +10,12 @@ module.exports = {
     try {
       console.log(limit, offset);
       const sql_query = `
-        SELECT * FROM PLAYERS
+      SELECT steam_id, mmr, username, profile_picture, count(*) as games
+        FROM players as p
+        JOIN game_players as gp
+        ON p.player_id = gp.player_id
+        GROUP BY p.player_id
+        ORDER BY games DESC
         LIMIT $1 OFFSET $2
       `;
       const { rows } = await query(sql_query, [limit, offset]);
@@ -22,12 +27,12 @@ module.exports = {
   async findPlayerBySteamID(steamID) {
     try {
       const sql_query = `
-      SELECT steam_id, mmr, username, profile_picture, count(*) as numGames
+      SELECT steam_id, mmr, username, profile_picture, count(*) as games
         FROM players as p
         JOIN game_players as gp
         ON p.player_id = gp.player_id
-        WHERE p.steam_id = $1;
-        GROUP BY p.player_id
+        WHERE p.steam_id = $1
+        GROUP BY p.player_id;
       `;
       const { rows } = await query(sql_query, [steamID]);
       return rows[0];
