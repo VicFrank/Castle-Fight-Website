@@ -15,7 +15,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/player/:steamid", async (req, res) => {
+router.get("/:steamid", async (req, res) => {
   try {
     const steamid = req.params.steamid;
     const playerInfo = await players.findPlayerBySteamID(steamid);
@@ -26,7 +26,7 @@ router.get("/player/:steamid", async (req, res) => {
   }
 });
 
-router.get("/player/:steamid/games", async (req, res) => {
+router.get("/:steamid/games", async (req, res) => {
   try {
     const steamid = req.params.steamid;
     const playerInfo = await games.findGamesBySteamID(steamid);
@@ -37,7 +37,7 @@ router.get("/player/:steamid/games", async (req, res) => {
   }
 });
 
-router.get("/player/:steamid/races", async (req, res) => {
+router.get("/:steamid/races", async (req, res) => {
   try {
     const steamid = req.params.steamid;
     const playerInfo = await players.getNumRacesPicked(steamid);
@@ -48,7 +48,7 @@ router.get("/player/:steamid/races", async (req, res) => {
   }
 });
 
-router.get("/player/:steamid/buildings", async (req, res) => {
+router.get("/:steamid/buildings", async (req, res) => {
   try {
     const steamid = req.params.steamid;
     const firstBuildings = await players.getFirstBuildingCounts(steamid);
@@ -58,17 +58,6 @@ router.get("/player/:steamid/buildings", async (req, res) => {
       allBuildings: allBuildings
     };
     res.status(200).json(result);
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({ message: "Server Error" });
-  }
-});
-
-router.get("/leaderboard", async (req, res) => {
-  try {
-    const numPlayers = parseInt(req.query.limit) || 100;
-    const leaderboard = await players.getLeaderboard(numPlayers);
-    res.status(200).json(leaderboard);
   } catch (error) {
     console.log(error);
     res.status(500).send({ message: "Server Error" });

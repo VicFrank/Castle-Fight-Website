@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS game_players (
 CREATE TABLE IF NOT EXISTS rounds (
   game_id INTEGER REFERENCES games(game_id),
   round_number INT NOT NULL,
-  round_winner TEXT,
+  round_winner INT,
   duration INT
 );
 

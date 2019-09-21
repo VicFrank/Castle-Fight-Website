@@ -165,13 +165,13 @@ module.exports = {
       building_wins AS 
       (SELECT build_order[1].building, count(*)
         FROM round_players
-        JOIN games
-        ON round_players.game_id = games.game_id
+        JOIN rounds
+        ON round_players.game_id = rounds.game_id
         WHERE round_players.player_id IS NOT NULL
-        AND games.winning_team = round_players.team
+        AND rounds.round_winner = round_players.team
         GROUP BY build_order[1].building
       )
-      SELECT building_counts.building, building_wins.count as wins, building_counts.count as games,
+      SELECT building_counts.building, building_wins.count as wins, building_counts.count as rounds,
       ROUND(building_wins.count::numeric / building_counts.count::numeric, 2) as percentage FROM building_counts
         JOIN building_wins
         ON building_counts.building = building_wins.building
@@ -196,14 +196,14 @@ module.exports = {
       building_wins AS 
       (SELECT bo.building, count(*)
         FROM round_players
-        JOIN games
-        ON round_players.game_id = games.game_id,
+        JOIN rounds
+        ON round_players.game_id = rounds.game_id,
           unnest(round_players.build_order) bo
         WHERE round_players.player_id IS NOT NULL
-          AND games.winning_team = round_players.team
+          AND rounds.round_winner = round_players.team
         GROUP BY bo.building
       )
-      SELECT building_counts.building, building_wins.count as wins, building_counts.count as games,
+      SELECT building_counts.building, building_wins.count as wins, building_counts.count as rounds,
       ROUND(building_wins.count::numeric / building_counts.count::numeric, 2) as percentage FROM building_counts
         JOIN building_wins
         ON building_counts.building = building_wins.building
@@ -232,21 +232,21 @@ module.exports = {
       const sql_query = `
       WITH race_wins AS
       (SELECT race, count(race)
-        FROM games
+        FROM rounds
         JOIN round_players
-        ON games.game_id = round_players.game_id
-        WHERE round_players.team = games.winning_team
+        ON rounds.game_id = round_players.game_id
+        WHERE round_players.team = rounds.round_winner
         GROUP BY race
       ),
       total_games AS
       (
       (SELECT race, count(race)
-        FROM games
+        FROM rounds
         JOIN round_players
-        ON games.game_id = round_players.game_id
+        ON rounds.game_id = round_players.game_id
         GROUP BY race)
       )
-      SELECT race_wins.race, race_wins.count AS wins, total_games.count AS games, ROUND(race_wins.count::NUMERIC / total_games.count::NUMERIC, 2) AS percentage
+      SELECT race_wins.race, race_wins.count AS wins, total_games.count AS rounds, ROUND(race_wins.count::NUMERIC / total_games.count::NUMERIC, 2) AS percentage
         FROM race_wins
         JOIN total_games
         ON race_wins.race = total_games.race

@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const gamesRouter = require("./routes/games");
 const playersRouter = require("./routes/players");
+const baseRouter = require("./routes/base");
 
 const app = express();
 const port = 3000;
@@ -16,10 +17,7 @@ app.use(
   })
 );
 
-app.get("/", (request, response) => {
-  response.json({ info: "API for Castle Fight stats" });
-});
-
+app.use("/", baseRouter);
 app.use("/games", gamesRouter);
 app.use("/players", playersRouter);
 
