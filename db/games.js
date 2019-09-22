@@ -114,7 +114,7 @@ module.exports = {
           );
         }
 
-        if (ranked && ratingChange) {
+        if (ranked) {
           const westAverageMMR =
             mmrData.west.reduce((a, b) => a + b) / mmrData.west.length;
           const eastAverageMMR =
@@ -124,21 +124,23 @@ module.exports = {
               ? getEloRatingChange(westAverageMMR, eastAverageMMR)
               : getEloRatingChange(eastAverageMMR, westAverageMMR);
 
-          for (let roundPlayer of playerStats) {
-            const { playerID, team } = roundPlayer;
+          if (ratingChange) {
+            for (let roundPlayer of playerStats) {
+              const { playerID, team } = roundPlayer;
 
-            const mmr = playerIDtoMMR[playerID];
-            const mmrChange = team == winner ? ratingChange : -ratingChange;
+              const mmr = playerIDtoMMR[playerID];
+              const mmrChange = team == winner ? ratingChange : -ratingChange;
 
-            const playerPrimaryKey = playerIDtoPrimaryKey[playerID];
+              const playerPrimaryKey = playerIDtoPrimaryKey[playerID];
 
-            if (mmr && mmrChange && playerPrimaryKey) {
-              await query(
-                `UPDATE players
-                 SET mmr = mmr + $1
-                 WHERE player_id = $2`,
-                [mmrChange, playerPrimaryKey]
-              );
+              if (mmr && mmrChange && playerPrimaryKey) {
+                await query(
+                  `UPDATE players
+                  SET mmr = mmr + $1
+                  WHERE player_id = $2`,
+                  [mmrChange, playerPrimaryKey]
+                );
+              }
             }
           }
         }
