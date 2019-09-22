@@ -1,9 +1,11 @@
 const { query } = require("./index");
+const { getEloRatingChange } = require("../utility/mmr");
 
 module.exports = {
   async create(gameData) {
     try {
       let playerIDtoPrimaryKey = {};
+      let playerIDtoMMR = {};
 
       const { playerInfo, settings, winner, ranked, rounds } = gameData;
       const { roundsToWin, allowBots, cheatsEnabled } = settings;
@@ -25,16 +27,21 @@ module.exports = {
         if (steamID !== null) {
           // console.log(`Inserting player with steamID: ${steamID}`);
           const { rows: playerRows } = await query(
-            "INSERT INTO players(steam_id, username) values ($1, $2) on conflict(steam_id) do UPDATE SET username = $2 RETURNING (player_id, mmr)",
+            `INSERT INTO players(steam_id, username)
+             values ($1, $2)
+             on conflict(steam_id)
+             do UPDATE SET username = $2
+             RETURNING (player_id, mmr)`,
             [steamID, username]
           );
 
           const returnedRow = playerRows[0].row;
           const parsedRow = returnedRow.slice(1, -1).split(",");
           const playerPrimaryKey = parsedRow[0];
-          const mmr = parsedRow[1];
+          const mmr = parseInt(parsedRow[1]);
 
           playerIDtoPrimaryKey[dotaPlayerID] = playerPrimaryKey;
+          playerIDtoMMR[dotaPlayerID] = mmr;
 
           // Add the players to this game
           await query(
@@ -53,6 +60,11 @@ module.exports = {
           [gameID, roundNumber, winner, duration]
         );
 
+        let mmrData = {
+          west: [],
+          east: []
+        };
+
         for (let roundPlayer of playerStats) {
           const {
             playerID,
@@ -64,6 +76,15 @@ module.exports = {
             income,
             buildOrder
           } = roundPlayer;
+
+          // this will be undefined if there is a bot, but if there is a bot
+          // the game shouldn't be ranked, and we shouldn't be calculating
+          // mmr anyway
+          const mmr = playerIDtoMMR[playerID];
+
+          // grab the stuff we need to calculate mmr
+          if (team === 2) mmrData.west.push(mmr);
+          else if (team === 3) mmrData.east.push(mmr);
 
           const playerPrimaryKey = playerIDtoPrimaryKey[playerID];
 
@@ -93,8 +114,37 @@ module.exports = {
           );
         }
 
-        return gameID;
+        const westAverageMMR =
+          mmrData.west.reduce((a, b) => a + b) / mmrData.west.length;
+        const eastAverageMMR =
+          mmrData.east.reduce((a, b) => a + b) / mmrData.east.length;
+        const ratingChange =
+          winner == 2
+            ? getEloRatingChange(westAverageMMR, eastAverageMMR)
+            : getEloRatingChange(eastAverageMMR, westAverageMMR);
+
+        if (ranked && ratingChange) {
+          for (let roundPlayer of playerStats) {
+            const { playerID, team } = roundPlayer;
+
+            const mmr = playerIDtoMMR[playerID];
+            const mmrChange = team == winner ? ratingChange : -ratingChange;
+
+            const playerPrimaryKey = playerIDtoPrimaryKey[playerID];
+
+            if (mmr && mmrChange && playerPrimaryKey) {
+              await query(
+                `UPDATE players
+                 SET mmr = mmr + $1
+                 WHERE player_id = $2`,
+                [mmrChange, playerPrimaryKey]
+              );
+            }
+          }
+        }
       }
+
+      return gameID;
     } catch (error) {
       throw error;
     }
