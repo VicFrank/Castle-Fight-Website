@@ -33,8 +33,6 @@ router.post("/", async (req, res) => {
       ? keys.dedicatedServerKey
       : keys.toolsKey;
 
-    console.log(server_key);
-
     if (server_key != dedicatedServerKey) {
       res.status(403).send({ message: `You are not authorized to add data` });
       return;
@@ -43,6 +41,7 @@ router.post("/", async (req, res) => {
     const insertedGameID = await games.create(parsedData);
     res.status(201).send({ message: `Created game with ID ${insertedGameID}` });
   } catch (error) {
+    console.log(data);
     console.log(error);
     res.status(500).send({ message: "Server Error" });
   }

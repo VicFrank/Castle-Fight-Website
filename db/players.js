@@ -56,7 +56,7 @@ module.exports = {
       const sql_query = `
       SELECT mmr, username, steam_id
         FROM players
-        ORDER BY mmr
+        ORDER BY mmr DESC
         LIMIT $1
       `;
       const { rows } = await query(sql_query, [numPlayers]);
