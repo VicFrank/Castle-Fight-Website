@@ -205,7 +205,7 @@ module.exports = {
       throw error;
     }
   },
-  async getFirstBuildingCounts() {
+  async getFirstBuildingWinRates() {
     try {
       const sql_query = `
       WITH building_counts AS
@@ -218,7 +218,7 @@ module.exports = {
       (SELECT build_order[1].building, count(*)
         FROM round_players
         JOIN rounds
-        ON round_players.game_id = rounds.game_id
+        ON (round_players.game_id, round_players.round_number) = (rounds.game_id, rounds.round_number)
         WHERE round_players.player_id IS NOT NULL
         AND rounds.round_winner = round_players.team
         GROUP BY build_order[1].building
@@ -252,7 +252,7 @@ module.exports = {
         (SELECT DISTINCT (round_players.game_id, round_players.round_number), bo.building
           FROM round_players
           JOIN rounds
-          ON round_players.game_id = rounds.game_id,
+          ON (round_players.game_id, round_players.round_number) = (rounds.game_id, rounds.round_number),
             unnest(round_players.build_order) bo
           WHERE round_players.player_id IS NOT NULL
             AND rounds.round_winner = round_players.team
