@@ -81,7 +81,7 @@ router.get("/records/first_buildings", async (req, res) => {
 
 router.get("/records/all_buildings", async (req, res) => {
   try {
-    const gameInfo = await games.getBuildingCounts();
+    const gameInfo = await games.getBuildingWinRates();
     res.status(200).json(gameInfo);
   } catch (error) {
     console.log(error);

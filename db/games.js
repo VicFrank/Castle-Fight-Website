@@ -114,16 +114,16 @@ module.exports = {
           );
         }
 
-        const westAverageMMR =
-          mmrData.west.reduce((a, b) => a + b) / mmrData.west.length;
-        const eastAverageMMR =
-          mmrData.east.reduce((a, b) => a + b) / mmrData.east.length;
-        const ratingChange =
-          winner == 2
-            ? getEloRatingChange(westAverageMMR, eastAverageMMR)
-            : getEloRatingChange(eastAverageMMR, westAverageMMR);
-
         if (ranked && ratingChange) {
+          const westAverageMMR =
+            mmrData.west.reduce((a, b) => a + b) / mmrData.west.length;
+          const eastAverageMMR =
+            mmrData.east.reduce((a, b) => a + b) / mmrData.east.length;
+          const ratingChange =
+            winner == 2
+              ? getEloRatingChange(westAverageMMR, eastAverageMMR)
+              : getEloRatingChange(eastAverageMMR, westAverageMMR);
+
           for (let roundPlayer of playerStats) {
             const { playerID, team } = roundPlayer;
 
@@ -177,7 +177,7 @@ module.exports = {
         [gameID]
       );
       const result = {
-        ...rows[0],
+        ...rows,
         players: playerRows
       };
       return result;
@@ -233,25 +233,29 @@ module.exports = {
       throw error;
     }
   },
-  async getBuildingCounts() {
+  async getBuildingWinRates() {
     try {
       const sql_query = `
       WITH building_counts AS
-      (SELECT bo.building, count(*)
-        FROM round_players,
-        unnest(round_players.build_order) bo
-        WHERE round_players.player_id IS NOT NULL
-        GROUP BY bo.building
+      (SELECT building, count(*) FROM
+        (SELECT DISTINCT (game_id, round_number, team), bo.building
+          FROM round_players,
+          unnest(build_order) bo
+          WHERE player_id IS NOT NULL
+        ) t1
+      GROUP BY building
       ),
       building_wins AS 
-      (SELECT bo.building, count(*)
-        FROM round_players
-        JOIN rounds
-        ON round_players.game_id = rounds.game_id,
-          unnest(round_players.build_order) bo
-        WHERE round_players.player_id IS NOT NULL
-          AND rounds.round_winner = round_players.team
-        GROUP BY bo.building
+      (SELECT building, count(*) FROM
+        (SELECT DISTINCT (round_players.game_id, round_players.round_number), bo.building
+          FROM round_players
+          JOIN rounds
+          ON round_players.game_id = rounds.game_id,
+            unnest(round_players.build_order) bo
+          WHERE round_players.player_id IS NOT NULL
+            AND rounds.round_winner = round_players.team
+        ) t2
+        GROUP BY building
       )
       SELECT building_counts.building, building_wins.count as wins, building_counts.count as rounds,
       ROUND(building_wins.count::numeric / building_counts.count::numeric, 2) as percentage FROM building_counts
@@ -268,7 +272,7 @@ module.exports = {
   async getGames(limit = 100, offset = 0) {
     try {
       const sql_query = `
-        SELECT * FROM GAMES ORDER BY created_at
+        SELECT * FROM GAMES ORDER BY created_at DESC
         LIMIT $1 OFFSET $2
       `;
       const { rows } = await query(sql_query, [limit, offset]);

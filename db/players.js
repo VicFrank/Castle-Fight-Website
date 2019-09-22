@@ -5,7 +5,7 @@ module.exports = {
     try {
       console.log(limit, offset);
       const sql_query = `
-      SELECT steam_id, mmr, username, profile_picture, count(*) as games
+      SELECT p.player_id, steam_id, mmr, username, profile_picture, count(*) as games
         FROM players as p
         JOIN game_players as gp
         ON p.player_id = gp.player_id
