@@ -22,28 +22,28 @@ module.exports = {
   async findPlayerBySteamID(steamID) {
     try {
       const sql_query = `
-      WITH num_games AS
+      WITH player AS
       (
-        SELECT steam_id, mmr, username, profile_picture, count(*) as games
-          FROM players as p
-          JOIN game_players as gp
-          ON p.player_id = gp.player_id
-          WHERE p.steam_id = $1
-          GROUP BY p.player_id
+      SELECT * FROM players
+        WHERE steam_id = $1
       ),
-      num_wins AS
+      game_stats AS
       (
-        SELECT count(*) as wins
-          FROM players as p
-          JOIN round_players as rp
-          ON p.player_id = rp.player_id
-          JOIN games as g
-          ON g.game_id = rp.game_id
-          WHERE g.winning_team = rp.team
-            AND p.steam_id = $1
-          GROUP BY p.player_id
+      SELECT 
+        COUNT(DISTINCT(g.game_id)) as num_games,
+        COUNT(DISTINCT (case when g.winning_team = rp.team then g.game_id end)) as game_wins,
+        COUNT(DISTINCT(rp.game_id, rp.round_number)) as num_rounds,
+        COUNT(DISTINCT (case when r.round_winner = rp.team then (rp.game_id, rp.round_number) end)) as round_wins
+      FROM players as p
+        JOIN round_players as rp
+        ON p.player_id = rp.player_id
+        JOIN games as g
+        ON g.game_id = rp.game_id
+        JOIN rounds as r
+        ON (r.game_id, r.round_number) = (rp.game_id, rp.round_number)
+        WHERE p.steam_id = $1
       )
-      SELECT steam_id, mmr, username, profile_picture, games, wins FROM num_wins, num_games;
+      SELECT * FROM player, game_stats;
       `;
       const { rows } = await query(sql_query, [steamID]);
       return rows[0];

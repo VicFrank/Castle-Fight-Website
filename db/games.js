@@ -164,6 +164,20 @@ module.exports = {
       throw error;
     }
   },
+  async deleteGameByID(gameID) {
+    try {
+      const sql_query = `
+        DELETE FROM game_players WHERE game_id = $1;
+        DELETE FROM rounds WHERE game_id = $1;
+        DELETE FROM round_players WHERE game_id = $1;
+        DELETE FROM games WHERE game_id = $1;
+      `;
+      await query(sql_query, [gameID]);
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  },
   async findRoundsByGameID(gameID) {
     try {
       const { rows } = await query(
