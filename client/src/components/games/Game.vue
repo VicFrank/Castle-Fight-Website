@@ -9,9 +9,9 @@
       <div class="round-result">
         Round {{round.round_number}}:
         <span
-          v-bind:class="{'west-color': gameInfo.winning_team == 2, 'east-color': gameInfo.winning_team == 3}"
+          v-bind:class="{'west-color': round.round_winner == 2, 'east-color': round.round_winner == 3}"
           class="title"
-        >{{gameInfo.winning_team | intToTeam}} Victory</span>
+        >{{round.round_winner | intToTeam}} Victory</span>
       </div>
       <div class="west-color team-header">Western Forces</div>
       <table class="body-2">
@@ -108,6 +108,7 @@ export default {
   }),
 
   mounted() {
+    //https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/games/${this.$route.params.game_id}/rounds
     fetch(`/api/games/${this.$route.params.game_id}/rounds`)
       .then(res => res.json())
       .then(rounds => {

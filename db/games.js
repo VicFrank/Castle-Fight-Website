@@ -125,10 +125,12 @@ module.exports = {
             mmrData.west.reduce((a, b) => a + b) / mmrData.west.length;
           const eastAverageMMR =
             mmrData.east.reduce((a, b) => a + b) / mmrData.east.length;
-          const ratingChange =
-            roundWinner == 2
-              ? getEloRatingChange(westAverageMMR, eastAverageMMR)
-              : getEloRatingChange(eastAverageMMR, westAverageMMR);
+          let ratingChange;
+          if (roundWinner == 2)
+            ratingChange = getEloRatingChange(westAverageMMR, eastAverageMMR);
+          else if (roundWinner == 3)
+            ratingChange = getEloRatingChange(eastAverageMMR, westAverageMMR);
+          else ratingChange = 0;
 
           if (ratingChange) {
             for (let roundPlayer of playerStats) {
