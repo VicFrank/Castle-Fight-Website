@@ -1,5 +1,6 @@
 const { query } = require("./index");
 const { getEloRatingChange } = require("../utility/mmr");
+const { parseBuildEvent } = require("./typeParser");
 
 module.exports = {
   async create(gameData) {
@@ -52,12 +53,12 @@ module.exports = {
       }
 
       for (let round of rounds) {
-        const { roundNumber, winner, duration, playerStats } = round;
+        const { roundNumber, roundWinner, duration, playerStats } = round;
         // console.log(`Inserting round ${roundNumber}`);
         await query(
           `INSERT INTO rounds(game_id, round_number, round_winner, duration)
            values($1, $2, $3, $4)`,
-          [gameID, roundNumber, winner, duration]
+          [gameID, roundNumber, roundWinner, duration]
         );
 
         let mmrData = {
@@ -114,13 +115,13 @@ module.exports = {
           );
         }
 
-        if (ranked) {
+        if (ranked && roundWinner < 4) {
           const westAverageMMR =
             mmrData.west.reduce((a, b) => a + b) / mmrData.west.length;
           const eastAverageMMR =
             mmrData.east.reduce((a, b) => a + b) / mmrData.east.length;
           const ratingChange =
-            winner == 2
+            roundWinner == 2
               ? getEloRatingChange(westAverageMMR, eastAverageMMR)
               : getEloRatingChange(eastAverageMMR, westAverageMMR);
 
@@ -129,7 +130,8 @@ module.exports = {
               const { playerID, team } = roundPlayer;
 
               const mmr = playerIDtoMMR[playerID];
-              const mmrChange = team == winner ? ratingChange : -ratingChange;
+              const mmrChange =
+                team == roundWinner ? ratingChange : -ratingChange;
 
               const playerPrimaryKey = playerIDtoPrimaryKey[playerID];
 
@@ -154,9 +156,15 @@ module.exports = {
   async findGameByID(gameID) {
     try {
       const sql_query = `
-      SELECT *
-        FROM games
-        WHERE game_id = $1
+      SELECT g.*,
+        COUNT(DISTINCT case when round_winner = 2 then round_number end) as west_wins,
+        COUNT(DISTINCT case when round_winner = 3 then round_number end) as east_wins,
+        COUNT(DISTINCT case when round_winner = 4 then round_number end) as draws
+        FROM games g 
+        JOIN rounds r
+        USING (game_id)
+        WHERE g.game_id = $1
+        GROUP BY g.game_id
       `;
       const { rows } = await query(sql_query, [gameID]);
       return rows[0];
@@ -187,16 +195,35 @@ module.exports = {
         [gameID]
       );
       const { rows: playerRows } = await query(
-        `SELECT *
-          FROM round_players
+        `SELECT rp.*, username, steam_id
+          FROM round_players rp
+          LEFT JOIN players p
+          USING (player_id)
           WHERE game_id = $1`,
         [gameID]
       );
-      const result = {
-        ...rows,
-        players: playerRows
-      };
-      return result;
+      rows.map(row => {
+        row.players = {};
+        row.players.west = [];
+        row.players.east = [];
+      });
+      // parse the build order list for each round player
+      const parsedPlayerRows = playerRows.map(player => ({
+        ...player,
+        build_order: parseBuildEvent(player.build_order)
+      }));
+      for (let roundPlayer of parsedPlayerRows) {
+        let roundNumber = roundPlayer.round_number;
+        // insert into the result
+        for (let row of rows) {
+          if (row.round_number == roundNumber) {
+            if (roundPlayer.team == 2) row.players.west.push(roundPlayer);
+            else if (roundPlayer.team == 3) row.players.east.push(roundPlayer);
+            break;
+          }
+        }
+      }
+      return rows;
     } catch (error) {
       throw error;
     }
@@ -204,13 +231,23 @@ module.exports = {
   async findGamesBySteamID(steamID, limit = 100, offset = 0) {
     try {
       const sql_query = `
-      SELECT games.*
-        FROM games
-        JOIN game_players
-        ON game_players.game_id = games.game_id
-        JOIN players
-        ON players.player_id = game_players.player_id
-        WHERE players.steam_id = $1
+      SELECT g.*, 
+        array_agg('['|| race || ']') as races,
+        COUNT(DISTINCT case when round_winner = 2 then round_number end) as west_wins,
+        COUNT(DISTINCT case when round_winner = 3 then round_number end) as east_wins,
+        COUNT(DISTINCT case when round_winner = 4 then round_number end) as draws,
+        COUNT(DISTINCT case when team = 2 then player_id end) as west_players,
+        COUNT(DISTINCT case when team = 3 then player_id end) as east_players
+        FROM round_players rp
+        JOIN games g
+        USING (game_id)
+        JOIN rounds r
+        USING (round_number, game_id)
+        JOIN players p
+        USING (player_id)
+        WHERE steam_id = $1
+        GROUP BY g.game_id
+        ORDER BY created_at DESC
         LIMIT $2 OFFSET $3;
       `;
       const { rows } = await query(sql_query, [steamID, limit, offset]);
@@ -285,14 +322,39 @@ module.exports = {
       throw error;
     }
   },
-  async getGames(limit = 100, offset = 0) {
+  async getGames(limit = 100, offset = 0, hours) {
     try {
+      let whereClause = "";
+      if (hours) {
+        whereClause = "WHERE created_at >= NOW() - $3 * INTERVAL '1 HOURS'";
+      }
       const sql_query = `
-        SELECT * FROM GAMES ORDER BY created_at DESC
-        LIMIT $1 OFFSET $2
+      SELECT g.*, 
+        array_agg('[' || round_number || ','|| race || ',' || team || ']') as races,
+        COUNT(DISTINCT case when round_winner = 2 then round_number end) as west_wins,
+        COUNT(DISTINCT case when round_winner = 3 then round_number end) as east_wins,
+        COUNT(DISTINCT case when round_winner = 4 then round_number end) as draws,
+        COUNT(DISTINCT case when team = 2 then player_id end) as west_players,
+        COUNT(DISTINCT case when team = 3 then player_id end) as east_players
+        FROM round_players rp
+        JOIN games g
+        USING (game_id)
+        JOIN rounds r
+        USING (round_number, game_id)
+        ${whereClause}
+        GROUP BY g.game_id
+        ORDER BY created_at DESC
+        LIMIT $1 OFFSET $2;
       `;
-      const { rows } = await query(sql_query, [limit, offset]);
-      return rows;
+      let result;
+      if (hours) {
+        const { rows } = await query(sql_query, [limit, offset, hours]);
+        result = rows;
+      } else {
+        const { rows } = await query(sql_query, [limit, offset]);
+        result = rows;
+      }
+      return result;
     } catch (error) {
       throw error;
     }
@@ -305,21 +367,28 @@ module.exports = {
         FROM rounds
         JOIN round_players
         ON rounds.game_id = round_players.game_id
+        JOIN players
+        ON round_players.player_id = players.player_id
         WHERE round_players.team = rounds.round_winner
         GROUP BY race
       ),
-      total_games AS
+      total_rounds AS
       (
       (SELECT race, count(race)
         FROM rounds
         JOIN round_players
         ON rounds.game_id = round_players.game_id
+        JOIN players
+        ON round_players.player_id = players.player_id
         GROUP BY race)
       )
-      SELECT race_wins.race, race_wins.count AS wins, total_games.count AS rounds, ROUND(race_wins.count::NUMERIC / total_games.count::NUMERIC, 2) AS percentage
+      SELECT race_wins.race,
+          race_wins.count AS wins,
+          total_rounds.count AS rounds,
+          ROUND(race_wins.count::NUMERIC / total_rounds.count::NUMERIC, 2) AS percentage
         FROM race_wins
-        JOIN total_games
-        ON race_wins.race = total_games.race
+        JOIN total_rounds
+        ON race_wins.race = total_rounds.race
         ORDER BY percentage DESC;
       `;
       const { rows } = await query(sql_query);
@@ -328,16 +397,46 @@ module.exports = {
       throw error;
     }
   },
-  async findGamesInPastXHours(hours, limit = 100, offset = 0) {
+  async getRaceBuildingStats(race) {
     try {
-      console.log(hours);
       const sql_query = `
-        SELECT * FROM GAMES
-        WHERE created_at >= NOW() - $1 * INTERVAL '1 HOURS'
-        ORDER BY created_at
-        LIMIT $2 OFFSET $3
+      SELECT bo.building,
+        count(*),
+        COUNT(DISTINCT(rp.game_id, rp.round_number)) as num_rounds,
+        COUNT(DISTINCT(case when r.round_winner = rp.team then (rp.game_id, rp.round_number) end)) as wins,
+        COUNT(DISTINCT(case when r.round_winner != rp.team then (rp.game_id, rp.round_number) end)) as losses
+      FROM round_players rp
+        JOIN players p
+        USING (player_id)
+        JOIN rounds r
+        USING (game_id, round_number),
+          unnest(rp.build_order) bo	
+      WHERE rp.race = $1
+      GROUP BY bo.building
+      ORDER BY bo.count DESC;
       `;
-      const { rows } = await query(sql_query, [hours, limit, offset]);
+      const { rows } = await query(sql_query, [race]);
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  },
+  async getRaceFirstBuildingStats(race) {
+    try {
+      const sql_query = `
+      SELECT build_order[1].building,
+        count(*),
+        COUNT(case when r.round_winner = rp.team then (rp.game_id, rp.round_number) end) as wins
+      FROM round_players rp
+      JOIN players p
+      USING (player_id)
+      JOIN rounds r
+      USING (game_id, round_number)
+      WHERE race = $1
+      GROUP BY build_order[1].building
+      ORDER BY build_order[1].count DESC;
+      `;
+      const { rows } = await query(sql_query, [race]);
       return rows;
     } catch (error) {
       throw error;

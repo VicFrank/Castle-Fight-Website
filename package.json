@@ -4,15 +4,21 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon index.js",
-    "start": "node index.js"
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "nodemon index.js",
+    "client": "cd client && npm run serve",
+    "start": "node index.js",
+    "postbuild": "cd client && npm install && npm run build"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "apicache": "^1.5.2",
+    "concurrently": "^4.1.2",
     "express": "^4.17.1",
     "morgan": "^1.9.1",
     "nodemon": "^1.19.2",
-    "pg": "^7.12.1"
+    "pg": "^7.12.1",
+    "redis": "^2.8.0"
   }
 }
