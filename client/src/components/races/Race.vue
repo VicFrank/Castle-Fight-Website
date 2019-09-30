@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1>{{$route.params.race}}</h1>
-    <img class="race-image" v-bind:src="imagePath" v-bind:alt="$route.params.race" />
+    <img class="race-header-image" v-bind:src="imagePath" v-bind:alt="$route.params.race" />
     <BuildingStats v-bind:firstBuildings="firstBuildings" v-bind:allBuildings="allBuildings"></BuildingStats>
   </div>
 </template>
@@ -51,7 +51,7 @@ h1 {
   padding: 8px 0;
 }
 
-.race-image {
+.race-header-image {
   display: block;
   margin: auto;
   padding: 0 0 16px 0;

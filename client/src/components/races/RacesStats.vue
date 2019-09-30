@@ -16,7 +16,7 @@
             </router-link>
           </td>
           <td>{{race.rounds}}</td>
-          <td>{{race.percentage}}</td>
+          <td>{{race.percentage}} | percentage</td>
         </tr>
       </tbody>
     </table>

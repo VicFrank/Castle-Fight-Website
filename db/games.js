@@ -53,7 +53,12 @@ module.exports = {
       }
 
       for (let round of rounds) {
-        const { roundNumber, roundWinner, duration, playerStats } = round;
+        const {
+          roundNumber,
+          winner: roundWinner,
+          duration,
+          playerStats
+        } = round;
         // console.log(`Inserting round ${roundNumber}`);
         await query(
           `INSERT INTO rounds(game_id, round_number, round_winner, duration)
