@@ -16,8 +16,11 @@
             <div class="subtextfont-weight-light">{{game.created_at | dateFromNow}}</div>
           </th>
           <th class="caption">
-            <div v-if="game.ranked">Ranked</div>
-            <span v-if="game.allow_bots">Bots Allowed</span>
+            <div v-if="game.ranked ">
+              <span v-if="game.ranked">Ranked</span>
+              <span v-else>Unranked</span>
+              <span v-if="game.allow_bots">Bots</span>
+            </div>
             {{game.west_players}}v{{game.east_players}}
           </th>
           <th>
