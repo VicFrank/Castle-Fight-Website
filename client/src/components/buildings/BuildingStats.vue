@@ -5,17 +5,29 @@
       <thead>
         <tr>
           <th>Building</th>
-          <th>Count</th>
+          <th>Built</th>
           <th>Win Rate</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="building in firstBuildings" :key="building.building">
           <td>
-            <router-link :to="'/buildings/' + building.building">{{building.building}}</router-link>
+            <v-tooltip left>
+              <template v-slot:activator="{ on }">
+                <router-link :to="'/buildings/' + building.building">
+                  <img
+                    class="building-image"
+                    v-bind:src="getBuildingImagePath(building.building)"
+                    v-bind:alt="building.building"
+                    v-on="on"
+                  />
+                </router-link>
+              </template>
+              <span>{{building.building | underscoreToSpace | capitalizeWords}}</span>
+            </v-tooltip>
           </td>
           <td>{{building.count}}</td>
-          <td>{{(building.wins / building.count) | percentage(2)}}</td>
+          <td>{{(building.wins / building.count) | percentage(1)}}</td>
         </tr>
       </tbody>
     </table>
@@ -32,11 +44,23 @@
       <tbody>
         <tr v-for="building in allBuildings" :key="building.building">
           <td>
-            <router-link :to="'/buildings/' + building.building">{{building.building}}</router-link>
+            <v-tooltip left>
+              <template v-slot:activator="{ on }">
+                <router-link :to="'/buildings/' + building.building">
+                  <img
+                    class="building-image"
+                    v-bind:src="getBuildingImagePath(building.building)"
+                    v-bind:alt="building.building"
+                    v-on="on"
+                  />
+                </router-link>
+              </template>
+              <span>{{building.building | underscoreToSpace | capitalizeWords}}</span>
+            </v-tooltip>
           </td>
           <td>{{building.count}}</td>
           <td>{{building.num_rounds}}</td>
-          <td>{{(building.wins / building.num_rounds) | percentage(2)}}</td>
+          <td>{{(building.wins / building.num_rounds) | percentage(1)}}</td>
         </tr>
       </tbody>
     </table>
@@ -53,7 +77,12 @@ export default {
     allBuildings: Array
   },
 
-  methods: {}
+  methods: {
+    getBuildingImagePath(buildingName) {
+      if (!buildingName) return null;
+      return require(`../../assets/ability-icons/${buildingName}_small.png`);
+    }
+  }
 };
 </script>
 
@@ -61,5 +90,11 @@ export default {
 td {
   min-width: 100px;
   text-align: center;
+}
+
+.building-image {
+  width: auto;
+  height: 100%;
+  max-height: 36px;
 }
 </style>

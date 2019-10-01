@@ -81,6 +81,19 @@ Vue.filter("trimFirstAndLast", function(value) {
   if (value) return value.slice(1, -1);
 });
 
+Vue.filter("underscoreToSpace", function(value) {
+  if (value) return value.replace(/_/g, " ");
+});
+
+Vue.filter("capitalizeWords", function(value) {
+  if (value) {
+    var lower = String(value).toLowerCase();
+    return lower.replace(/(^| )(\w)/g, function(x) {
+      return x.toUpperCase();
+    });
+  }
+});
+
 Vue.filter("round", function(value, decimals) {
   if (!value) {
     value = 0;

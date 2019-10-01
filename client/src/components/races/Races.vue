@@ -7,6 +7,8 @@
 
 <script>
 const API_URL = "api/races";
+// const API_URL =
+// "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/races";
 import RaceStats from "./RacesStats";
 
 export default {
@@ -23,7 +25,7 @@ export default {
     fetch(API_URL)
       .then(res => res.json())
       .then(races => {
-        this.races = races;
+        this.races = races.filter(race => race.race !== "Wisp");
       });
   },
   methods: {}

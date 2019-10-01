@@ -23,6 +23,8 @@
 </template>
 
 <script>
+// const API_URL =
+// "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/leaderboard/";
 const API_URL = "api/leaderboard/";
 
 export default {

@@ -24,15 +24,29 @@ export default {
     fetch(`/api/races/${this.$route.params.race}/all_buildings`)
       .then(res => res.json())
       .then(allBuildings => {
-        this.allBuildings = allBuildings;
+        this.allBuildings = this.parseBuildings(allBuildings);
       });
     fetch(`/api/races/${this.$route.params.race}/first_buildings`)
       .then(res => res.json())
       .then(firstBuildings => {
-        this.firstBuildings = firstBuildings;
+        this.firstBuildings = this.parseBuildings(firstBuildings);
       });
   },
-  methods: {},
+  methods: {
+    parseBuildings(buildings) {
+      const maxCount = Math.max.apply(
+        Math,
+        buildings.map(function(o) {
+          return o.count;
+        })
+      );
+
+      const filteredBuildings = buildings.filter(
+        building => building.count > maxCount / 200 && building.building
+      );
+      return filteredBuildings;
+    }
+  },
   computed: {
     imagePath() {
       const race = this.$route.params.race;

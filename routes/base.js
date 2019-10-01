@@ -24,7 +24,7 @@ router.get("/", async (req, res) => {
 //   }
 // });
 
-router.get("/leaderboard", cacheWithRedis("1 hour"), async (req, res) => {
+router.get("/leaderboard", cacheWithRedis("5 minutes"), async (req, res) => {
   try {
     const numPlayers = parseInt(req.query.limit) || 100;
     const leaderboard = await players.getLeaderboard(numPlayers);

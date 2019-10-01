@@ -26,6 +26,11 @@ export default {
   margin: 0 auto;
 }
 
+a {
+  text-decoration: none;
+  color: #4fa8ef;
+}
+
 thead {
   background-color: #4e403a;
   text-transform: uppercase;
