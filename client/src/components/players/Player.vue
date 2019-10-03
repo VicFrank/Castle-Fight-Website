@@ -51,9 +51,9 @@ import RaceStats from "../races/RacesStats";
 import BuildingStats from "../buildings/BuildingStats";
 import PlayerGamesList from "./PlayerGamesList";
 
-// const API_URL = "/api/players/";
-const API_URL =
-  "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/players/";
+const API_URL = "/api/players/";
+// const API_URL =
+// "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/players/";
 
 export default {
   name: "player",
