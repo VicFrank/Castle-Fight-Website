@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1>Races</h1>
-    <RaceStats v-bind:raceStats="races"></RaceStats>
+    <RaceStats v-bind:raceStats="races" v-bind:numRounds="numRounds"></RaceStats>
   </div>
 </template>
 
@@ -12,11 +12,12 @@ const API_URL = "api/races";
 import RaceStats from "./RacesStats";
 
 export default {
-  name: "races",
   data: () => ({
     error: "",
-    races: []
+    races: [],
+    numRounds: 0
   }),
+
   components: {
     RaceStats
   },
@@ -27,8 +28,12 @@ export default {
       .then(races => {
         this.races = races.filter(race => race.race !== "Wisp");
       });
-  },
-  methods: {}
+    fetch(`/api/games/records/num_player_rounds`)
+      .then(res => res.json())
+      .then(numRounds => {
+        this.numRounds = parseInt(numRounds.count);
+      });
+  }
 };
 </script>
 

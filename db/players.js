@@ -71,9 +71,9 @@ module.exports = {
       (SELECT race, count(race)
         FROM rounds
         JOIN round_players
-        ON rounds.game_id = round_players.game_id
+        USING (game_id, round_number)
         JOIN players
-        ON round_players.player_id = players.player_id
+        USING (player_id)
         WHERE round_players.team = rounds.round_winner
 	   		AND players.steam_id = $1
         GROUP BY race
@@ -81,11 +81,9 @@ module.exports = {
       total_rounds AS
       (
       (SELECT race, count(race)
-        FROM rounds
-        JOIN round_players
-        ON rounds.game_id = round_players.game_id
+        FROM round_players
         JOIN players
-        ON round_players.player_id = players.player_id
+        USING (player_id)
         WHERE players.steam_id = $1
         GROUP BY race)
       )

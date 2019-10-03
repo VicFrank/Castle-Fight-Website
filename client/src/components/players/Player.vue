@@ -35,7 +35,7 @@
       </div>
       <div class="pick-stats">
         <div class="title">Picks</div>
-        <RaceStats v-bind:raceStats="races"></RaceStats>
+        <RaceStats v-bind:raceStats="races" v-bind:numRounds="playerInfo.num_rounds | toNumber"></RaceStats>
         <BuildingStats
           v-bind:firstBuildings="firstBuildings"
           v-bind:allBuildings="allBuildings"
@@ -51,9 +51,9 @@ import RaceStats from "../races/RacesStats";
 import BuildingStats from "../buildings/BuildingStats";
 import PlayerGamesList from "./PlayerGamesList";
 
-const API_URL = "/api/players/";
-// const API_URL =
-  // "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/players/";
+// const API_URL = "/api/players/";
+const API_URL =
+  "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/players/";
 
 export default {
   name: "player",
@@ -75,6 +75,7 @@ export default {
     fetch(`${API_URL}${this.$route.params.steam_id}`)
       .then(res => res.json())
       .then(playerInfo => {
+        console.log(this.playerInfo);
         this.playerInfo = playerInfo;
       });
     fetch(`${API_URL}${this.$route.params.steam_id}/races`)

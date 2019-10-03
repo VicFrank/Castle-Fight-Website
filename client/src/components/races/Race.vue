@@ -7,7 +7,7 @@
     <BuildingStats
       v-bind:firstBuildings="firstBuildings"
       v-bind:allBuildings="allBuildings"
-      v-bind:totalNumRounds="raceStats.rounds"
+      v-bind:totalNumRounds="raceStats.rounds | toNumber"
     ></BuildingStats>
   </div>
 </template>
@@ -17,7 +17,7 @@ import BuildingStats from "../buildings/BuildingStats";
 
 const API_URL = "/api/races";
 // const API_URL =
-  // "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/races";
+// "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/races";
 
 export default {
   name: "race",
@@ -46,7 +46,7 @@ export default {
     fetch(`${API_URL}/${this.$route.params.race}`)
       .then(res => res.json())
       .then(raceStats => {
-        this.raceStats = raceStats;
+        this.raceStats = raceStats[0];
       });
     fetch(`/api/games/records/num_player_rounds`)
       .then(res => res.json())

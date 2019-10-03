@@ -4,7 +4,7 @@
       <thead>
         <tr>
           <th>Race</th>
-          <th>Rounds</th>
+          <th>Pick Rate</th>
           <th>Win Rate</th>
         </tr>
       </thead>
@@ -13,8 +13,14 @@
           <td>
             <RaceLink v-bind:race="race.race"></RaceLink>
           </td>
-          <td>{{race.rounds / numRounds | percentage(1)}}</td>
-          <td>{{race.percentage | percentage(1)}} <PercentBar v-bind:width="race.percentage | percentage"></PercentBar></td>
+          <td>
+            {{race.rounds / numRounds | percentage(1)}}
+            <PercentBar v-bind:width="race.rounds / numRounds | percentage(1)"></PercentBar>
+          </td>
+          <td>
+            {{race.percentage | percentage(1)}}
+            <PercentBar v-bind:width="race.percentage | percentage"></PercentBar>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -23,33 +29,20 @@
 
 <script>
 import RaceLink from "./RaceLink";
-import PercentBar from "../Utility/PercentBar"
+import PercentBar from "../Utility/PercentBar";
 
 export default {
   name: "race-stats",
 
   props: {
-    raceStats: Array
+    raceStats: Array,
+    numRounds: Number
   },
 
   components: {
     PercentBar,
     RaceLink
-  },
-
-  data: () => ({
-    numRounds: 0,
-  }),
-
-  mounted() {
-    fetch(`/api/games/records/num_player_rounds`)
-      .then(res => res.json())
-      .then(numRounds => {
-        this.numRounds = parseInt(numRounds.count);
-      });
-  },
-
-  computed: {}
+  }
 };
 </script>
 
