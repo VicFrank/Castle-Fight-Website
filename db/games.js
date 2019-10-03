@@ -268,8 +268,7 @@ module.exports = {
       SELECT count(*) FROM round_players;
       `;
       const { rows } = await query(sql_query);
-      console.log(rows);
-      return rows;
+      return rows[0];
     } catch (error) {
       throw error;
     }

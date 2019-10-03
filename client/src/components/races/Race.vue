@@ -1,9 +1,9 @@
 <template>
   <div>
     <h1>{{$route.params.race}}</h1>
+    <img class="race-header-image" v-bind:src="imagePath" v-bind:alt="$route.params.race" />
     <p>Pick Rate: {{raceStats.rounds / totalPlayerRounds | percentage}}</p>
     <p>Win Rate: {{raceStats.percentage | percentage}}</p>
-    <img class="race-header-image" v-bind:src="imagePath" v-bind:alt="$route.params.race" />
     <BuildingStats
       v-bind:firstBuildings="firstBuildings"
       v-bind:allBuildings="allBuildings"
