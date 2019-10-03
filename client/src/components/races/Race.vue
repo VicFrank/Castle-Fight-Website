@@ -1,35 +1,57 @@
 <template>
   <div>
     <h1>{{$route.params.race}}</h1>
+    <p>Pick Rate: {{raceStats.rounds / totalPlayerRounds | percentage}}</p>
+    <p>Win Rate: {{raceStats.percentage | percentage}}</p>
     <img class="race-header-image" v-bind:src="imagePath" v-bind:alt="$route.params.race" />
-    <BuildingStats v-bind:firstBuildings="firstBuildings" v-bind:allBuildings="allBuildings"></BuildingStats>
+    <BuildingStats
+      v-bind:firstBuildings="firstBuildings"
+      v-bind:allBuildings="allBuildings"
+      v-bind:totalNumRounds="raceStats.rounds"
+    ></BuildingStats>
   </div>
 </template>
 
 <script>
 import BuildingStats from "../buildings/BuildingStats";
 
+const API_URL = "/api/races";
+// const API_URL =
+  // "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/races";
+
 export default {
   name: "race",
   data: () => ({
     error: "",
     allBuildings: [],
-    firstBuildings: []
+    firstBuildings: [],
+    raceStats: [],
+    totalPlayerRounds: 0
   }),
   components: {
     BuildingStats
   },
 
   mounted() {
-    fetch(`/api/races/${this.$route.params.race}/all_buildings`)
+    fetch(`${API_URL}/${this.$route.params.race}/all_buildings`)
       .then(res => res.json())
       .then(allBuildings => {
         this.allBuildings = this.parseBuildings(allBuildings);
       });
-    fetch(`/api/races/${this.$route.params.race}/first_buildings`)
+    fetch(`${API_URL}/${this.$route.params.race}/first_buildings`)
       .then(res => res.json())
       .then(firstBuildings => {
         this.firstBuildings = this.parseBuildings(firstBuildings);
+      });
+    fetch(`${API_URL}/${this.$route.params.race}`)
+      .then(res => res.json())
+      .then(raceStats => {
+        this.raceStats = raceStats;
+      });
+    fetch(`/api/games/records/num_player_rounds`)
+      .then(res => res.json())
+      .then(totalPlayerRounds => {
+        this.totalPlayerRounds = parseInt(totalPlayerRounds.count);
       });
   },
   methods: {

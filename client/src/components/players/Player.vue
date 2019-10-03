@@ -9,20 +9,20 @@
         <thead>
           <tr>
             <th></th>
-            <th>Wins</th>
-            <th>Win Percent</th>
+            <th>Amount</th>
+            <th>Win Rate</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>Games</td>
-            <td>{{playerInfo.game_wins}}</td>
-            <td>{{(playerInfo.game_wins / playerInfo.num_games) | percentage(2)}}</td>
+            <td>{{playerInfo.num_games}}</td>
+            <td>{{(playerInfo.game_wins / playerInfo.num_games) | percentage}}</td>
           </tr>
           <tr>
             <td>Rounds</td>
-            <td>{{playerInfo.round_wins}}</td>
-            <td>{{(playerInfo.round_wins / playerInfo.num_rounds) | percentage(2)}}</td>
+            <td>{{playerInfo.num_rounds}}</td>
+            <td>{{(playerInfo.round_wins / playerInfo.num_rounds) | percentage}}</td>
           </tr>
         </tbody>
       </table>
@@ -31,12 +31,16 @@
       <div class="games-list">
         <div class="title">Recent Games</div>
 
-        <GamesList v-bind:games="games" v-bind:showRaces="true"></GamesList>
+        <PlayerGamesList v-bind:games="games" v-bind:showRaces="true"></PlayerGamesList>
       </div>
       <div class="pick-stats">
         <div class="title">Picks</div>
         <RaceStats v-bind:raceStats="races"></RaceStats>
-        <BuildingStats v-bind:firstBuildings="firstBuildings" v-bind:allBuildings="allBuildings"></BuildingStats>
+        <BuildingStats
+          v-bind:firstBuildings="firstBuildings"
+          v-bind:allBuildings="allBuildings"
+          v-bind:totalNumRounds="playerInfo.num_rounds | toNumber"
+        ></BuildingStats>
       </div>
     </div>
   </div>
@@ -45,7 +49,11 @@
 <script>
 import RaceStats from "../races/RacesStats";
 import BuildingStats from "../buildings/BuildingStats";
-import GamesList from "../games/GamesList";
+import PlayerGamesList from "./PlayerGamesList";
+
+const API_URL = "/api/players/";
+// const API_URL =
+  // "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/players/";
 
 export default {
   name: "player",
@@ -60,26 +68,26 @@ export default {
   components: {
     RaceStats,
     BuildingStats,
-    GamesList
+    PlayerGamesList
   },
 
   mounted() {
-    fetch(`/api/players/${this.$route.params.steam_id}`)
+    fetch(`${API_URL}${this.$route.params.steam_id}`)
       .then(res => res.json())
       .then(playerInfo => {
         this.playerInfo = playerInfo;
       });
-    fetch(`/api/players/${this.$route.params.steam_id}/races`)
+    fetch(`${API_URL}${this.$route.params.steam_id}/races`)
       .then(res => res.json())
       .then(races => {
         this.races = races;
       });
-    fetch(`/api/players/${this.$route.params.steam_id}/games`)
+    fetch(`${API_URL}${this.$route.params.steam_id}/games`)
       .then(res => res.json())
       .then(games => {
         this.games = games;
       });
-    fetch(`/api/players/${this.$route.params.steam_id}/buildings`)
+    fetch(`${API_URL}${this.$route.params.steam_id}/buildings`)
       .then(res => res.json())
       .then(buildings => {
         this.firstBuildings = buildings.firstBuildings;

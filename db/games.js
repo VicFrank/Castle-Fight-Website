@@ -239,12 +239,11 @@ module.exports = {
     try {
       const sql_query = `
       SELECT g.*, 
+        team,
         array_agg('['|| race || ']') as races,
         COUNT(DISTINCT case when round_winner = 2 then round_number end) as west_wins,
         COUNT(DISTINCT case when round_winner = 3 then round_number end) as east_wins,
-        COUNT(DISTINCT case when round_winner = 4 then round_number end) as draws,
-        COUNT(DISTINCT case when team = 2 then player_id end) as west_players,
-        COUNT(DISTINCT case when team = 3 then player_id end) as east_players
+        COUNT(DISTINCT case when round_winner = 4 then round_number end) as draws
         FROM round_players rp
         JOIN games g
         USING (game_id)
@@ -253,7 +252,7 @@ module.exports = {
         JOIN players p
         USING (player_id)
         WHERE steam_id = $1
-        GROUP BY g.game_id
+        GROUP BY g.game_id, team
         ORDER BY created_at DESC
         LIMIT $2 OFFSET $3;
       `;
@@ -263,29 +262,31 @@ module.exports = {
       throw error;
     }
   },
+  async getNumPlayerRounds() {
+    try {
+      const sql_query = `
+      SELECT count(*) FROM round_players;
+      `;
+      const { rows } = await query(sql_query);
+      console.log(rows);
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  },
   async getFirstBuildingWinRates() {
     try {
       const sql_query = `
-      WITH building_counts AS
-      (SELECT build_order[1].building, count(*)
-        FROM round_players
-        WHERE round_players.player_id IS NOT NULL
-        GROUP BY build_order[1].building
-      ),
-      building_wins AS 
-      (SELECT build_order[1].building, count(*)
-        FROM round_players
-        JOIN rounds
-        ON (round_players.game_id, round_players.round_number) = (rounds.game_id, rounds.round_number)
-        WHERE round_players.player_id IS NOT NULL
-        AND rounds.round_winner = round_players.team
-        GROUP BY build_order[1].building
-      )
-      SELECT building_counts.building, building_wins.count as wins, building_counts.count as rounds,
-      ROUND(building_wins.count::numeric / building_counts.count::numeric, 2) as percentage FROM building_counts
-        JOIN building_wins
-        ON building_counts.building = building_wins.building
-        ORDER BY percentage DESC;
+      SELECT build_order[1].building,
+        count(*),
+        COUNT(case when r.round_winner = rp.team then (rp.game_id, rp.round_number) end) as wins
+      FROM round_players rp
+      JOIN players p
+      USING (player_id)
+      JOIN rounds r
+      USING (game_id, round_number)
+      GROUP BY build_order[1].building
+      ORDER BY build_order[1].count DESC;
       `;
       const { rows } = await query(sql_query);
       return rows;
@@ -316,11 +317,26 @@ module.exports = {
             AND rounds.round_winner = round_players.team
         ) t2
         GROUP BY building
+      ),
+      total_counts AS
+      (
+        (SELECT building, count(*) FROM
+        (SELECT bo.building
+          FROM round_players,
+            unnest(round_players.build_order) bo
+          WHERE round_players.player_id IS NOT NULL
+        ) t3
+        GROUP BY building
+      )
       )
       SELECT building_counts.building, building_wins.count as wins, building_counts.count as rounds,
-      ROUND(building_wins.count::numeric / building_counts.count::numeric, 2) as percentage FROM building_counts
+      ROUND(building_wins.count::numeric / building_counts.count::numeric, 2) as percentage,
+      total_counts.count as total_purchased
+        FROM building_counts
         JOIN building_wins
-        ON building_counts.building = building_wins.building
+        USING (building)
+        JOIN total_counts
+        USING (building)
         ORDER BY percentage DESC;
       `;
       const { rows } = await query(sql_query);
@@ -373,20 +389,14 @@ module.exports = {
       (SELECT race, count(race)
         FROM rounds
         JOIN round_players
-        ON rounds.game_id = round_players.game_id
-        JOIN players
-        ON round_players.player_id = players.player_id
+        USING (game_id, round_number)
         WHERE round_players.team = rounds.round_winner
         GROUP BY race
       ),
       total_rounds AS
       (
       (SELECT race, count(race)
-        FROM rounds
-        JOIN round_players
-        ON rounds.game_id = round_players.game_id
-        JOIN players
-        ON round_players.player_id = players.player_id
+        FROM round_players
         GROUP BY race)
       )
       SELECT race_wins.race,
@@ -399,6 +409,39 @@ module.exports = {
         ORDER BY percentage DESC;
       `;
       const { rows } = await query(sql_query);
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  },
+  async getRaceStats(race) {
+    try {
+      const sql_query = `
+      WITH race_wins AS
+      (SELECT race, count(race)
+        FROM rounds
+        JOIN round_players
+        USING (game_id, round_number)
+        WHERE round_players.team = rounds.round_winner
+          AND race = $1
+        GROUP BY race
+      ),
+      total_rounds AS
+      (
+      (SELECT race, count(race)
+        FROM round_players
+        WHERE race = $1
+        GROUP BY race)
+      )
+      SELECT race_wins.race,
+          race_wins.count AS wins,
+          total_rounds.count AS rounds,
+          ROUND(race_wins.count::NUMERIC / total_rounds.count::NUMERIC, 2) AS percentage
+        FROM race_wins
+        JOIN total_rounds
+        ON race_wins.race = total_rounds.race;
+      `;
+      const { rows } = await query(sql_query, [race]);
       return rows;
     } catch (error) {
       throw error;
@@ -431,17 +474,50 @@ module.exports = {
   async getRaceFirstBuildingStats(race) {
     try {
       const sql_query = `
-      SELECT build_order[1].building,
-        count(*),
-        COUNT(case when r.round_winner = rp.team then (rp.game_id, rp.round_number) end) as wins
-      FROM round_players rp
-      JOIN players p
-      USING (player_id)
-      JOIN rounds r
-      USING (game_id, round_number)
-      WHERE race = $1
-      GROUP BY build_order[1].building
-      ORDER BY build_order[1].count DESC;
+      WITH building_counts AS
+      (SELECT building, count(*) FROM
+        (SELECT DISTINCT (game_id, round_number, team), bo.building
+          FROM round_players,
+          unnest(build_order) bo
+          WHERE player_id IS NOT NULL
+            AND race = $1
+        ) t1
+      GROUP BY building
+      ),
+      building_wins AS 
+      (SELECT building, count(*) FROM
+        (SELECT DISTINCT (round_players.game_id, round_players.round_number), bo.building
+          FROM round_players
+          JOIN rounds
+          ON (round_players.game_id, round_players.round_number) = (rounds.game_id, rounds.round_number),
+            unnest(round_players.build_order) bo
+          WHERE round_players.player_id IS NOT NULL
+            AND rounds.round_winner = round_players.team
+            AND race = $1
+        ) t2
+        GROUP BY building
+      ),
+      total_counts AS
+      (
+        (SELECT building, count(*) FROM
+        (SELECT bo.building
+          FROM round_players,
+            unnest(round_players.build_order) bo
+          WHERE round_players.player_id IS NOT NULL
+            AND race = $1
+        ) t3
+        GROUP BY building
+      )
+      )
+      SELECT building_counts.building, building_wins.count as wins, building_counts.count as rounds,
+      ROUND(building_wins.count::numeric / building_counts.count::numeric, 2) as percentage,
+      total_counts.count as total_purchased
+        FROM building_counts
+        JOIN building_wins
+        USING (building)
+        JOIN total_counts
+        USING (building)
+        ORDER BY rounds DESC;
       `;
       const { rows } = await query(sql_query, [race]);
       return rows;

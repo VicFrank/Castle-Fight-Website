@@ -7,7 +7,7 @@
     <div class="headline match-result">{{getRoundResults(gameInfo)}}</div>
     <div v-for="round in rounds" :key="round.round_number">
       <div class="round-result">
-        Round {{round.round_number}}:
+        Round {{round.round_number - 1}}:
         <span
           v-bind:class="{'west-color': round.round_winner == 2, 'east-color': round.round_winner == 3}"
           class="title"

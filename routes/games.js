@@ -70,6 +70,19 @@ router.get("/:gameid/rounds", cacheWithRedis("1 week"), async (req, res) => {
   }
 });
 
+router.get("/records/num_player_rounds", cacheWithRedis("1 day"),
+  async (req, res) => {
+    try {
+      console.log('test')
+      let rows = await games.getNumPlayerRounds();
+      res.status(200).json(rows);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "Server Error" });
+    }
+  }
+);
+
 router.get(
   "/records/first_buildings",
   cacheWithRedis("1 day"),

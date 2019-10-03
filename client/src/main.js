@@ -74,7 +74,7 @@ Vue.filter("intToTeam", function(value) {
 });
 
 Vue.filter("trimBrackets", function(value) {
-  if (value) return value.replace(/\s|\[|\]/g, "");
+  if (value) return value.replace(/\[|\]/g, "");
 });
 
 Vue.filter("trimFirstAndLast", function(value) {
@@ -83,6 +83,10 @@ Vue.filter("trimFirstAndLast", function(value) {
 
 Vue.filter("underscoreToSpace", function(value) {
   if (value) return value.replace(/_/g, " ");
+});
+
+Vue.filter("toNumber", function(value) {
+  if (value) return parseInt(value);
 });
 
 Vue.filter("capitalizeWords", function(value) {

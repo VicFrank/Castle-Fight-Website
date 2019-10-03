@@ -6,6 +6,7 @@
           <th>Game</th>
           <th>Settings</th>
           <th>Result</th>
+          <th>Race</th>
         </tr>
       </thead>
       <tbody class="caption">
@@ -20,33 +21,41 @@
               <span v-else>Unranked</span>
               <span v-if="game.allow_bots">Bots</span>
             </div>
-            {{game.west_players}}v{{game.east_players}}
+            <!-- {{game.west_players}}v{{game.east_players}} -->
           </th>
           <th>
-            <div
-              v-bind:class="{'west-color': game.winning_team == 2, 'east-color': game.winning_team == 3}"
-            >{{game.winning_team | intToTeam}} Victory</div>
+            <div v-if="game.winning_team === game.team" class="west-color">Won Match</div>
+            <div v-if="game.winning_team !== game.team" class="east-color">Lost Match</div>
             <div>{{getRoundResults(game)}}</div>
+          </th>
+          <th>
+            <span v-for="(race, index) in game.races" :key="index">
+              <RaceLink v-bind:race="race | trimBrackets"></RaceLink>
+            </span>
           </th>
         </tr>
       </tbody>
     </table>
   </div>
 </template>
-
+z
 <script>
+import RaceLink from "../races/RaceLink";
+
 export default {
-  name: "games_list",
   data: () => ({}),
 
   props: {
     games: Array
   },
+  components: {
+    RaceLink
+  },
   methods: {
     getRoundResults(game) {
       const draws = game.draws;
       let results = "";
-      switch (game.winning_team) {
+      switch (game.team) {
         case 2:
           results = `${game.west_wins}-${game.east_wins}`;
           break;
@@ -65,5 +74,5 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 </style>

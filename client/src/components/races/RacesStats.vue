@@ -5,23 +5,16 @@
         <tr>
           <th>Race</th>
           <th>Rounds</th>
-          <th>Win Rate*</th>
+          <th>Win Rate</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="race in raceStats" :key="race.race">
           <td>
-            <v-tooltip left>
-              <template v-slot:activator="{ on }">
-                <router-link :to="'/races/' + race.race">
-                  <img v-bind:src="getRaceImagePath(race.race)" v-bind:alt="race.race" v-on="on" />
-                </router-link>
-              </template>
-              <span>{{race.race | capitalizeWords}}</span>
-            </v-tooltip>
+            <RaceLink v-bind:race="race.race"></RaceLink>
           </td>
-          <td>{{race.rounds}}</td>
-          <td>{{race.percentage | percentage()}}</td>
+          <td>{{race.rounds / numRounds | percentage(1)}}</td>
+          <td>{{race.percentage | percentage(1)}} <PercentBar v-bind:width="race.percentage | percentage"></PercentBar></td>
         </tr>
       </tbody>
     </table>
@@ -29,19 +22,31 @@
 </template>
 
 <script>
+import RaceLink from "./RaceLink";
+import PercentBar from "../Utility/PercentBar"
+
 export default {
   name: "race-stats",
-  data: () => ({}),
 
   props: {
     raceStats: Array
   },
 
-  methods: {
-    getRaceImagePath(race) {
-      const parsedRace = race.toLowerCase().replace(/ /g, "_");
-      return require(`../../assets/races/${parsedRace}_small.jpg`);
-    }
+  components: {
+    PercentBar,
+    RaceLink
+  },
+
+  data: () => ({
+    numRounds: 0,
+  }),
+
+  mounted() {
+    fetch(`/api/games/records/num_player_rounds`)
+      .then(res => res.json())
+      .then(numRounds => {
+        this.numRounds = parseInt(numRounds.count);
+      });
   },
 
   computed: {}

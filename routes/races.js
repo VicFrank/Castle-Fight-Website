@@ -21,6 +21,17 @@ router.get("/", cacheWithRedis("1 day"), async (req, res) => {
   }
 });
 
+router.get("/:race", cacheWithRedis("1 day"), async (req, res) => {
+  try {
+    const race = req.params.race.capitalize();
+    let rows = await games.getRaceStats(race);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Server Error" });
+  }
+});
+
 router.get(
   "/:race/all_buildings",
   cacheWithRedis("1 day"),
