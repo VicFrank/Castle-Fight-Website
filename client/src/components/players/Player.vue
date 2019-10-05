@@ -75,7 +75,6 @@ export default {
     fetch(`${API_URL}${this.$route.params.steam_id}`)
       .then(res => res.json())
       .then(playerInfo => {
-        console.log(this.playerInfo);
         this.playerInfo = playerInfo;
       });
     fetch(`${API_URL}${this.$route.params.steam_id}/races`)

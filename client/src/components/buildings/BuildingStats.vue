@@ -5,7 +5,7 @@
       <thead>
         <tr>
           <th>Building</th>
-          <th>Total Built</th>
+          <th>Build Rate</th>
           <th>Win Rate</th>
         </tr>
       </thead>
@@ -26,8 +26,14 @@
               <span>{{building.building | underscoreToSpace | capitalizeWords}}</span>
             </v-tooltip>
           </td>
-          <td>{{building.count}} <PercentBar v-bind:width="building.count / totalNumRounds | percentage"></PercentBar></td>
-          <td>{{building.wins / building.count | percentage(1)}} <PercentBar v-bind:width="building.wins / building.count | percentage"></PercentBar></td>
+          <td>
+            {{building.count / totalNumRounds | percentage}}
+            <PercentBar v-bind:width="building.count / totalNumRounds | percentage"></PercentBar>
+          </td>
+          <td>
+            {{building.wins / building.count | percentage(1)}}
+            <PercentBar v-bind:width="building.wins / building.count | percentage"></PercentBar>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -59,8 +65,14 @@
             </v-tooltip>
           </td>
           <td>{{building.count / totalNumRounds | round(1)}}</td>
-          <td>{{building.num_rounds / totalNumRounds | percentage(1)}}<PercentBar v-bind:width="building.num_rounds / totalNumRounds | percentage"></PercentBar></td>
-          <td>{{building.wins / building.num_rounds | percentage(1)}}<PercentBar v-bind:width="building.wins / building.num_rounds | percentage"></PercentBar></td>
+          <td>
+            {{building.num_rounds / totalNumRounds | percentage(1)}}
+            <PercentBar v-bind:width="building.num_rounds / totalNumRounds | percentage"></PercentBar>
+          </td>
+          <td>
+            {{building.wins / building.num_rounds | percentage(1)}}
+            <PercentBar v-bind:width="building.wins / building.num_rounds | percentage"></PercentBar>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -68,7 +80,7 @@
 </template>
 
 <script>
-import PercentBar from "../Utility/PercentBar"
+import PercentBar from "../Utility/PercentBar";
 export default {
   name: "building-stats",
   data: () => ({}),

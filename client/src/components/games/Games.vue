@@ -7,6 +7,8 @@
 
 <script>
 const API_URL = "api/games/";
+// const API_URL =
+// "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/games/";
 import GamesList from "./GamesList";
 
 export default {

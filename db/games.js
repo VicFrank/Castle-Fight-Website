@@ -473,50 +473,17 @@ module.exports = {
   async getRaceFirstBuildingStats(race) {
     try {
       const sql_query = `
-      WITH building_counts AS
-      (SELECT building, count(*) FROM
-        (SELECT DISTINCT (game_id, round_number, team), bo.building
-          FROM round_players,
-          unnest(build_order) bo
-          WHERE player_id IS NOT NULL
-            AND race = $1
-        ) t1
-      GROUP BY building
-      ),
-      building_wins AS 
-      (SELECT building, count(*) FROM
-        (SELECT DISTINCT (round_players.game_id, round_players.round_number), bo.building
-          FROM round_players
-          JOIN rounds
-          ON (round_players.game_id, round_players.round_number) = (rounds.game_id, rounds.round_number),
-            unnest(round_players.build_order) bo
-          WHERE round_players.player_id IS NOT NULL
-            AND rounds.round_winner = round_players.team
-            AND race = $1
-        ) t2
-        GROUP BY building
-      ),
-      total_counts AS
-      (
-        (SELECT building, count(*) FROM
-        (SELECT bo.building
-          FROM round_players,
-            unnest(round_players.build_order) bo
-          WHERE round_players.player_id IS NOT NULL
-            AND race = $1
-        ) t3
-        GROUP BY building
-      )
-      )
-      SELECT building_counts.building, building_wins.count as wins, building_counts.count as rounds,
-      ROUND(building_wins.count::numeric / building_counts.count::numeric, 2) as percentage,
-      total_counts.count as total_purchased
-        FROM building_counts
-        JOIN building_wins
-        USING (building)
-        JOIN total_counts
-        USING (building)
-        ORDER BY rounds DESC;
+      SELECT build_order[1].building,
+        count(*),
+        COUNT(case when r.round_winner = rp.team then (rp.game_id, rp.round_number) end) as wins
+      FROM round_players rp
+      JOIN players p
+      USING (player_id)
+      JOIN rounds r
+      USING (game_id, round_number)
+      WHERE race = $1
+      GROUP BY build_order[1].building
+      ORDER BY build_order[1].count DESC;
       `;
       const { rows } = await query(sql_query, [race]);
       return rows;

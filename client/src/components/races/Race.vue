@@ -59,12 +59,12 @@ export default {
       const maxCount = Math.max.apply(
         Math,
         buildings.map(function(o) {
-          return o.count;
+          return o.wins;
         })
       );
 
       const filteredBuildings = buildings.filter(
-        building => building.count > maxCount / 200 && building.building
+        building => building.wins > maxCount / 200 && building.building
       );
       return filteredBuildings;
     }
