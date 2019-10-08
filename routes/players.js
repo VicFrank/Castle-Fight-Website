@@ -54,6 +54,21 @@ router.get("/:steamid/races", cacheWithRedis("5 minutes"), async (req, res) => {
 });
 
 router.get(
+  "/search/:username",
+  cacheWithRedis("5 minutes"),
+  async (req, res) => {
+    try {
+      const username = req.params.username;
+      const rows = await players.searchPlayersByUsername(username);
+      res.status(200).json(rows);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "Server Error" });
+    }
+  }
+);
+
+router.get(
   "/:steamid/buildings",
   cacheWithRedis("5 minutes"),
   async (req, res) => {

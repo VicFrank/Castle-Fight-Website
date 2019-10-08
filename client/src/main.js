@@ -12,6 +12,7 @@ import Race from "./components/races/Race";
 import Player from "./components/players/Player";
 import Leaderboard from "./components/Leaderboard";
 import Building from "./components/buildings/Building";
+import Search from "./components/search/Search";
 
 Vue.config.productionTip = false;
 
@@ -49,6 +50,10 @@ const routes = [
   {
     path: "/buildings/:building_name",
     component: Building
+  },
+  {
+    path: "/search",
+    component: Search
   }
 ];
 

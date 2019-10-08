@@ -50,6 +50,21 @@ module.exports = {
       throw error;
     }
   },
+  async searchPlayersByUsername(username) {
+    try {
+      const sql_query = `
+        SELECT players.*, COUNT(game_players) AS games
+        FROM players LEFT JOIN game_players USING (player_id)
+        WHERE username ILIKE '%' || $1 || '%'
+        GROUP BY player_id
+        ORDER BY games DESC;
+      `;
+      const { rows } = await query(sql_query, [username]);
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  },
   async getLeaderboard(numPlayers = 100) {
     try {
       const sql_query = `

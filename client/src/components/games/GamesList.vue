@@ -25,7 +25,12 @@
           <th>
             <div
               v-bind:class="{'west-color': game.winning_team == 2, 'east-color': game.winning_team == 3}"
-            >{{game.winning_team | intToTeam}} Victory</div>
+              v-if="game.winning_team"
+            >
+              <template v-if="game.winning_team !== 4">{{game.winning_team | intToTeam}} Victory</template>
+              <template v-else>Draw</template>
+            </div>
+            <div v-else>Unfinished</div>
             <div>{{getRoundResults(game)}}</div>
           </th>
         </tr>

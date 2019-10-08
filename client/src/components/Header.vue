@@ -5,6 +5,14 @@
         <v-btn text>Castle Fight</v-btn>
       </v-list-item>
       <v-divider></v-divider>
+      <v-text-field
+        label="Search for players..."
+        solo
+        flat
+        hide-details
+        prepend-inner-icon="search"
+        v-on:submit="searchPlayers"
+      ></v-text-field>
       <v-list-item link to="/games">Games</v-list-item>
       <v-list-item link to="/races">Races</v-list-item>
       <v-list-item link to="/leaderboard">Leaderboard</v-list-item>
@@ -12,9 +20,19 @@
     <v-app-bar>
       <v-app-bar-nav-icon class="d-md-none" @click="drawer = !drawer"></v-app-bar-nav-icon>
 
-      <v-btn text to="/">
+      <v-btn text to="/" class="mr-5">
         <v-icon large color="red" left>mdi-chess-rook</v-icon>Castle Fight
       </v-btn>
+
+      <v-text-field
+        solo-inverted
+        flat
+        hide-details
+        label="Search for players..."
+        prepend-inner-icon="mdi-magnify"
+        class="mr-3"
+        v-on:keyup.enter="searchPlayers"
+      ></v-text-field>
 
       <div class="flex-grow-1"></div>
 
@@ -31,7 +49,14 @@
 export default {
   data: () => ({
     drawer: null
-  })
+  }),
+
+  methods: {
+    searchPlayers: function(e) {
+      const searchValue = e.target.value;
+      this.$router.push({ path: "search", query: { q: searchValue } });
+    }
+  }
 };
 </script>
 

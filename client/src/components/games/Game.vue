@@ -3,7 +3,12 @@
     <div
       v-bind:class="{'west-color': gameInfo.winning_team == 2, 'east-color': gameInfo.winning_team == 3}"
       class="display-2 match-result"
-    >{{gameInfo.winning_team | intToTeam}} Victory</div>
+      v-if="gameInfo.winning_team"
+    >
+      <template v-if="gameInfo.winning_team !== 4">{{gameInfo.winning_team | intToTeam}} Victory</template>
+      <template v-else>Draw</template>
+    </div>
+    <div v-else-if="!loading" class="display-2 match-result">Unfinished</div>
     <div class="headline match-result">{{getRoundResults(gameInfo)}}</div>
     <div v-for="round in rounds" :key="round.round_number">
       <div class="round-result">
@@ -11,7 +16,10 @@
         <span
           v-bind:class="{'west-color': round.round_winner == 2, 'east-color': round.round_winner == 3}"
           class="title"
-        >{{round.round_winner | intToTeam}} Victory</span>
+        >
+          <template v-if="round.round_winner !== 4">{{round.round_winner | intToTeam}} Victory</template>
+          <template v-else>Draw</template>
+        </span>
       </div>
       <div class="west-color team-header">Western Forces</div>
       <TeamScoreboard v-bind:players="round.players.west"></TeamScoreboard>
@@ -23,26 +31,31 @@
 
 <script>
 import TeamScoreboard from "./TeamScoreboard";
+
+const API_URL = "api/games";
+// const API_URL = "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/games"
+
 export default {
   name: "game",
   data: () => ({
     error: "",
     rounds: [],
-    gameInfo: {}
+    gameInfo: {},
+    loading: true
   }),
 
   mounted() {
-    //https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/games/${this.$route.params.game_id}/rounds
-    fetch(`/api/games/${this.$route.params.game_id}/rounds`)
+    fetch(`${API_URL}/${this.$route.params.game_id}/rounds`)
       .then(res => res.json())
       .then(rounds => {
         rounds.sort((a, b) => a.round_number - b.round_number);
         this.rounds = rounds;
       });
-    fetch(`/api/games/${this.$route.params.game_id}`)
+    fetch(`${API_URL}/${this.$route.params.game_id}`)
       .then(res => res.json())
       .then(gameInfo => {
         this.gameInfo = gameInfo;
+        this.loading = false;
       });
   },
 
