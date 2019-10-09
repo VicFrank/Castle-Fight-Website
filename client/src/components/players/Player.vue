@@ -36,6 +36,17 @@
       <div class="pick-stats">
         <div class="title">Picks</div>
         <RaceStats v-bind:raceStats="races" v-bind:numRounds="playerInfo.num_rounds | toNumber"></RaceStats>
+        <!-- <v-menu offset-y>
+          <template v-slot:activator="{ on }">
+            <v-btn color="primary" dark v-on="on">Race</v-btn>
+          </template>
+
+          <v-list>
+            <v-list-item v-for="race in races" :key="race.race" v-on="onRaceSelected(race.race)">
+              <v-list-item-title>{{ race.race }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>-->
         <BuildingStats
           v-bind:firstBuildings="firstBuildings"
           v-bind:allBuildings="allBuildings"
@@ -94,7 +105,11 @@ export default {
         this.allBuildings = buildings.allBuildings;
       });
   },
-  methods: {}
+  methods: {
+    onRaceSelected(race) {
+      console.log(race);
+    }
+  }
 };
 </script>
 

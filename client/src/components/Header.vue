@@ -54,7 +54,7 @@ export default {
   methods: {
     searchPlayers: function(e) {
       const searchValue = e.target.value;
-      this.$router.push({ path: "search", query: { q: searchValue } });
+      this.$router.push({ path: "/search", query: { q: searchValue } });
     }
   }
 };

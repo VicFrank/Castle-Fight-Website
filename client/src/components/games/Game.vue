@@ -32,7 +32,7 @@
 <script>
 import TeamScoreboard from "./TeamScoreboard";
 
-const API_URL = "api/games";
+const API_URL = "/api/games";
 // const API_URL = "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/games"
 
 export default {

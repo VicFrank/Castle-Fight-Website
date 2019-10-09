@@ -265,7 +265,9 @@ module.exports = {
   async getNumPlayerRounds() {
     try {
       const sql_query = `
-      SELECT count(*) FROM round_players WHERE player_id IS NOT NULL;
+      SELECT count(*)
+      FROM round_players
+      WHERE round_players.player_id IS NOT NULL;
       `;
       const { rows } = await query(sql_query);
       return rows[0];
@@ -437,14 +439,18 @@ module.exports = {
         JOIN round_players
         USING (game_id, round_number)
         WHERE round_players.team = rounds.round_winner
+          AND player_id IS NOT NULL
           AND race = $1
         GROUP BY race
       ),
       total_rounds AS
       (
       (SELECT race, count(race)
-        FROM round_players
-        WHERE race = $1
+        FROM rounds
+        JOIN round_players
+        USING (game_id, round_number)
+        WHERE player_id IS NOT NULL
+          AND race = $1
         GROUP BY race)
       )
       SELECT race_wins.race,

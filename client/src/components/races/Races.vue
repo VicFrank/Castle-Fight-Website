@@ -6,7 +6,7 @@
 </template>
 
 <script>
-const API_URL = "api/races";
+const API_URL = "/api/races";
 // const API_URL =
 // "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/races";
 import RaceStats from "./RacesStats";

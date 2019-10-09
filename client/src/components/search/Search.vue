@@ -27,12 +27,21 @@ export default {
       return this.$route.query.q;
     }
   },
+  methods: {
+    getContent() {
+      fetch(`${API_URL}/${this.$route.query.q}`)
+        .then(res => res.json())
+        .then(users => {
+          this.users = users;
+        });
+    }
+  },
   mounted() {
-    fetch(`${API_URL}/${this.$route.query.q}`)
-      .then(res => res.json())
-      .then(users => {
-        this.users = users;
-      });
+    this.getContent();
+  },
+  beforeRouteUpdate(to, from, next) {
+    next();
+    this.getContent();
   }
 };
 </script>

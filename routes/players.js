@@ -8,6 +8,10 @@ const redis = require("redis");
 let cacheWithRedis = apicache.options({ redisClient: redis.createClient() })
   .middleware;
 
+String.prototype.capitalize = function() {
+  return this.charAt(0).toUpperCase() + this.slice(1);
+};
+
 router.get("/", cacheWithRedis("1 week"), async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 100;
@@ -52,6 +56,40 @@ router.get("/:steamid/races", cacheWithRedis("5 minutes"), async (req, res) => {
     res.status(500).send({ message: "Server Error" });
   }
 });
+
+router.get(
+  "/:steamid/races/:race",
+  cacheWithRedis("5 minutes"),
+  async (req, res) => {
+    try {
+      const steamid = req.params.steamid;
+      const race = req.params.race.capitalize();
+      const firstBuildings = await players.getFirstBuildingCountsByRace(
+        steamid,
+        race
+      );
+      const allBuildings = await players.getBuildingCountsByRace(steamid, race);
+      const result = {
+        firstBuildings: firstBuildings.map(stats => {
+          return {
+            ...stats,
+            building: !stats.building ? "" : stats.building.slice(1, -1)
+          };
+        }),
+        allBuildings: allBuildings.map(stats => {
+          return {
+            ...stats,
+            building: !stats.building ? "" : stats.building.slice(1, -1)
+          };
+        })
+      };
+      res.status(200).json(result);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ message: "Server Error" });
+    }
+  }
+);
 
 router.get(
   "/search/:username",

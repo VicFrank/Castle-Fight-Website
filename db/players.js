@@ -158,5 +158,52 @@ module.exports = {
     } catch (error) {
       throw error;
     }
+  },
+  async getFirstBuildingCountsByRace(steamID, race) {
+    try {
+      const sql_query = `
+      SELECT build_order[1].building,
+          count(*),
+          COUNT(case when r.round_winner = rp.team then (rp.game_id, rp.round_number) end) as wins
+        FROM round_players rp
+        JOIN players p
+        USING (player_id)
+        JOIN rounds r
+        USING (game_id, round_number)
+        WHERE p.steam_id = $1
+          AND rp.race = $2
+        GROUP BY build_order[1].building
+        ORDER BY build_order[1].count DESC;
+      `;
+      const { rows } = await query(sql_query, [steamID, race]);
+      return rows;
+    } catch (error) {
+      throw error;
+    }
+  },
+  async getBuildingCountsByRace(steamID, race) {
+    try {
+      const sql_query = `
+      SELECT bo.building,
+        count(*),
+        COUNT(DISTINCT(rp.game_id, rp.round_number)) as num_rounds,
+        COUNT(DISTINCT(case when r.round_winner = rp.team then (rp.game_id, rp.round_number) end)) as wins,
+        COUNT(DISTINCT(case when r.round_winner != rp.team then (rp.game_id, rp.round_number) end)) as losses
+      FROM round_players rp
+        JOIN players p
+        USING (player_id)
+        JOIN rounds r
+        USING (game_id, round_number),
+          unnest(rp.build_order) bo	
+      WHERE p.steam_id = $1
+        AND rp.race = $2
+      GROUP BY bo.building
+      ORDER BY bo.count DESC;
+      `;
+      const { rows } = await query(sql_query, [steamID, race]);
+      return rows;
+    } catch (error) {
+      throw error;
+    }
   }
 };
