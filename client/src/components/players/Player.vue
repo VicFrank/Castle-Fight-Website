@@ -1,40 +1,45 @@
 <template>
   <div>
-    <div>
-      <span class="display-1 font-weight-bold">{{playerInfo.username}}</span>
-      <span class="mmr">MMR: {{playerInfo.mmr}}</span>
-    </div>
-    <div class="game-stats">
-      <table>
-        <thead>
-          <tr>
-            <th></th>
-            <th>Amount</th>
-            <th>Win Rate</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Games</td>
-            <td>{{playerInfo.num_games}}</td>
-            <td>{{(playerInfo.game_wins / playerInfo.num_games) | percentage}}</td>
-          </tr>
-          <tr>
-            <td>Rounds</td>
-            <td>{{playerInfo.num_rounds}}</td>
-            <td>{{(playerInfo.round_wins / playerInfo.num_rounds) | percentage}}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <v-card class="d-flex flex-row my-2 px-2">
+      <span class="display-1 font-weight-bold my-auto mr-auto">{{playerInfo.username}}</span>
+      <v-card flat tile>
+        <v-container>
+          <div class="header">{{playerInfo.num_games}}</div>
+          <div class="sub-header">Games</div>
+        </v-container>
+      </v-card>
+      <v-card flat tile>
+        <v-container>
+          <div class="header">{{(playerInfo.game_wins / playerInfo.num_games) | percentage}}</div>
+          <div class="sub-header">Win Rate</div>
+        </v-container>
+      </v-card>
+      <v-card flat tile>
+        <v-container>
+          <div class="header">{{playerInfo.num_games}}</div>
+          <div class="sub-header">Rounds</div>
+        </v-container>
+      </v-card>
+      <v-card flat tile>
+        <v-container>
+          <div class="header">{{(playerInfo.round_wins / playerInfo.num_rounds) | percentage}}</div>
+          <div class="sub-header">Win Rate</div>
+        </v-container>
+      </v-card>
+      <v-card flat tile>
+        <v-container>
+          <div class="header">{{playerInfo.mmr}}</div>
+          <div class="sub-header">mmr</div>
+        </v-container>
+      </v-card>
+    </v-card>
     <div class="player-container">
       <div class="games-list">
-        <div class="title">Recent Games</div>
-
+        <h2>Recent Games</h2>
         <PlayerGamesList v-bind:games="games" v-bind:showRaces="true"></PlayerGamesList>
       </div>
       <div class="pick-stats">
-        <div class="title">Picks</div>
+        <h2>Picks</h2>
         <RaceStats v-bind:raceStats="races" v-bind:numRounds="playerInfo.num_rounds | toNumber"></RaceStats>
         <!-- <v-menu offset-y>
           <template v-slot:activator="{ on }">
@@ -114,15 +119,23 @@ export default {
 </script>
 
 <style scoped>
-td {
-  text-align: center;
-  min-width: 100px;
+.header {
+  color: white;
+  font-size: 12px;
+}
+
+.sub-header {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .player-container {
-  display: inline-grid;
-  grid-template-columns: repeat(2, 50%);
-  align-items: first baseline;
+  display: flex;
+}
+
+.games-list {
+  margin-right: 10px;
 }
 
 .mmr {

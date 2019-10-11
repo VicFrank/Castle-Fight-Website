@@ -33,17 +33,6 @@ a {
 
 thead {
   background-color: #4e403a;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  font-weight: 700;
-}
-
-th {
-  padding: 2px 8px;
-}
-
-td {
-  padding: 2px 8px;
 }
 
 tbody > tr:nth-child(even) {

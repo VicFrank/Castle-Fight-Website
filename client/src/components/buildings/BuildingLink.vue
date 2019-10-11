@@ -1,6 +1,6 @@
 <template>
   <div class="image-holder">
-    <v-tooltip left>
+    <v-tooltip left color="red darken-2">
       <template v-slot:activator="{ on }">
         <router-link :to="'/buildings/' + building">
           <img
@@ -9,7 +9,7 @@
             v-bind:alt="building"
             v-on="on"
           />
-          <div class="timestamp">{{getMinuteTime(buildTime)}}</div>
+          <div v-if="buildTime" class="timestamp">{{getMinuteTime(buildTime)}}</div>
         </router-link>
       </template>
       <span>{{building | underscoreToSpace | capitalizeWords}}</span>

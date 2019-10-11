@@ -1,5 +1,5 @@
 <template>
-  <v-tooltip left>
+  <v-tooltip left color="red darken-2">
     <template v-slot:activator="{ on }">
       <router-link :to="'/races/' + race">
         <img v-bind:src="getRaceImagePath(race)" v-bind:alt="race" v-on="on" />

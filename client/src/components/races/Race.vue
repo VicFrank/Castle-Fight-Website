@@ -2,8 +2,20 @@
   <div>
     <h1>{{$route.params.race}}</h1>
     <img class="race-header-image" v-bind:src="imagePath" v-bind:alt="$route.params.race" />
-    <p>Pick Rate: {{raceStats.rounds / totalPlayerRounds | percentage}}</p>
-    <p>Win Rate: {{raceStats.percentage | percentage}}</p>
+    <div class="d-flex flex-row justify-center my-2 px-2">
+      <v-card flat tile class="mr-2">
+        <v-container>
+          <div class="header">{{raceStats.rounds / totalPlayerRounds | percentage}}</div>
+          <div class="sub-header">Pick Rate</div>
+        </v-container>
+      </v-card>
+      <v-card flat tile>
+        <v-container>
+          <div class="header">{{raceStats.percentage | percentage}}</div>
+          <div class="sub-header">Win Rate</div>
+        </v-container>
+      </v-card>
+    </div>
     <BuildingStats
       v-bind:firstBuildings="firstBuildings"
       v-bind:allBuildings="allBuildings"
@@ -85,6 +97,17 @@ h1 {
   text-transform: uppercase;
   letter-spacing: 7px;
   padding: 8px 0;
+}
+
+.header {
+  color: white;
+  font-size: 12px;
+}
+
+.sub-header {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .race-header-image {

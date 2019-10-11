@@ -1,44 +1,46 @@
 <template>
   <div>
-    <table>
-      <thead>
-        <tr>
-          <th>Game</th>
-          <th>Settings</th>
-          <th>Result</th>
-          <th>Race</th>
-        </tr>
-      </thead>
-      <tbody class="caption">
-        <tr v-for="game in games" :key="game.game_id">
-          <th>
-            <router-link :to="'/games/' + game.game_id">{{game.game_id}}</router-link>
-            <div class="subtextfont-weight-light">{{game.created_at | dateFromNow}}</div>
-          </th>
-          <th class="caption">
-            <div v-if="game.ranked ">
-              <span v-if="game.ranked">Ranked</span>
-              <span v-else>Unranked</span>
-              <span v-if="game.allow_bots">Bots</span>
-            </div>
-            <!-- {{game.west_players}}v{{game.east_players}} -->
-          </th>
-          <th>
-            <div v-if="game.winning_team === game.team" class="west-color">Won Match</div>
-            <div v-if="game.winning_team !== game.team" class="east-color">Lost Match</div>
-            <div>{{getRoundResults(game)}}</div>
-          </th>
-          <th>
-            <span v-for="(race, index) in game.races" :key="index">
-              <RaceLink v-bind:race="race | trimBrackets"></RaceLink>
-            </span>
-          </th>
-        </tr>
-      </tbody>
-    </table>
+    <v-simple-table height="800px" class="games-list-table">
+      <template v-slot:default>
+        <thead>
+          <tr>
+            <th>Game</th>
+            <th>Settings</th>
+            <th>Result</th>
+            <th>Race</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="game in games" :key="game.game_id">
+            <td class="game-column">
+              <router-link :to="'/games/' + game.game_id">{{game.game_id}}</router-link>
+              <div class="caption">{{game.created_at | dateFromNow}}</div>
+            </td>
+            <td class="caption settings-column">
+              <div v-if="game.ranked ">
+                <span v-if="game.ranked">Ranked</span>
+                <span v-else>Unranked</span>
+                <span v-if="game.allow_bots">Bots</span>
+              </div>
+              <!-- {{game.west_players}}v{{game.east_players}} -->
+            </td>
+            <td class="result-column caption">
+              <div v-if="game.winning_team === game.team" class="west-color">Won Match</div>
+              <div v-if="game.winning_team !== game.team" class="east-color">Lost Match</div>
+              <div>{{getRoundResults(game)}}</div>
+            </td>
+            <td class="race-column">
+              <span v-for="(race, index) in game.races" :key="index">
+                <RaceLink v-bind:race="race | trimBrackets"></RaceLink>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </template>
+    </v-simple-table>
   </div>
 </template>
-z
+
 <script>
 import RaceLink from "../races/RaceLink";
 
@@ -75,4 +77,20 @@ export default {
 </script>
 
 <style scoped>
+.games-list-table {
+  width: 500px;
+}
+
+.game-column {
+  width: 25%;
+}
+.settings-column {
+  width: 15%;
+}
+.result-column {
+  width: 20%;
+}
+.race-column {
+  width: 35%;
+}
 </style>
