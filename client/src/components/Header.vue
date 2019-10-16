@@ -6,12 +6,13 @@
       </v-list-item>
       <v-divider></v-divider>
       <v-text-field
-        label="Search for players..."
-        solo
+        solo-inverted
         flat
         hide-details
-        prepend-inner-icon="search"
-        v-on:submit="searchPlayers"
+        label="Search for players..."
+        prepend-inner-icon="mdi-magnify"
+        class="mr-3"
+        v-on:keyup.enter="searchPlayers"
       ></v-text-field>
       <v-list-item link to="/games">Games</v-list-item>
       <v-list-item link to="/races">Races</v-list-item>
@@ -30,7 +31,7 @@
         hide-details
         label="Search for players..."
         prepend-inner-icon="mdi-magnify"
-        class="mr-3"
+        class="mr-3 d-none d-md-flex"
         v-on:keyup.enter="searchPlayers"
       ></v-text-field>
 

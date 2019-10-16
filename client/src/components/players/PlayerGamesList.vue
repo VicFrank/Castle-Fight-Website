@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-simple-table height="800px" class="games-list-table">
+    <v-simple-table height="675px" class="games-list-table">
       <template v-slot:default>
         <thead>
           <tr>
@@ -22,7 +22,7 @@
                 <span v-else>Unranked</span>
                 <span v-if="game.allow_bots">Bots</span>
               </div>
-              <!-- {{game.west_players}}v{{game.east_players}} -->
+              {{game.west_players}}v{{game.east_players}}
             </td>
             <td class="result-column caption">
               <div v-if="game.winning_team === game.team" class="west-color">Won Match</div>
@@ -77,20 +77,7 @@ export default {
 </script>
 
 <style scoped>
-.games-list-table {
-  width: 500px;
-}
-
-.game-column {
-  width: 25%;
-}
-.settings-column {
-  width: 15%;
-}
-.result-column {
-  width: 20%;
-}
-.race-column {
-  width: 35%;
+th {
+  text-align: center !important;
 }
 </style>

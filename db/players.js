@@ -41,6 +41,7 @@ module.exports = {
         JOIN rounds as r
         ON (r.game_id, r.round_number) = (rp.game_id, rp.round_number)
         WHERE p.steam_id = $1
+          AND ranked = True
       )
       SELECT * FROM player, game_stats;
       `;
@@ -89,8 +90,11 @@ module.exports = {
         USING (game_id, round_number)
         JOIN players
         USING (player_id)
+        JOIN games
+        USING (game_id)
         WHERE round_players.team = rounds.round_winner
-	   		AND players.steam_id = $1
+          AND ranked = True
+	   		  AND players.steam_id = $1
         GROUP BY race
       ),
       total_rounds AS
@@ -99,7 +103,10 @@ module.exports = {
         FROM round_players
         JOIN players
         USING (player_id)
+        JOIN games
+        USING (game_id)
         WHERE players.steam_id = $1
+          AND ranked = True
         GROUP BY race)
       )
       SELECT race_wins.race, race_wins.count AS wins, total_rounds.count AS rounds, ROUND(race_wins.count::NUMERIC / total_rounds.count::NUMERIC, 2) AS percentage
@@ -125,7 +132,10 @@ module.exports = {
         USING (player_id)
         JOIN rounds r
         USING (game_id, round_number)
+        JOIN games
+        USING (game_id)
         WHERE p.steam_id = $1
+          AND ranked = True
         GROUP BY build_order[1].building
         ORDER BY build_order[1].count DESC;
       `;
@@ -146,10 +156,13 @@ module.exports = {
       FROM round_players rp
         JOIN players p
         USING (player_id)
+        JOIN games
+        USING (game_id)
         JOIN rounds r
         USING (game_id, round_number),
           unnest(rp.build_order) bo	
       WHERE p.steam_id = $1
+        AND ranked = True
       GROUP BY bo.building
       ORDER BY bo.count DESC;
       `;
@@ -170,8 +183,11 @@ module.exports = {
         USING (player_id)
         JOIN rounds r
         USING (game_id, round_number)
+        JOIN games
+        USING (game_id)
         WHERE p.steam_id = $1
           AND rp.race = $2
+          AND ranked = True
         GROUP BY build_order[1].building
         ORDER BY build_order[1].count DESC;
       `;
@@ -192,11 +208,14 @@ module.exports = {
       FROM round_players rp
         JOIN players p
         USING (player_id)
+        JOIN games
+        USING (game_id)
         JOIN rounds r
         USING (game_id, round_number),
           unnest(rp.build_order) bo	
       WHERE p.steam_id = $1
         AND rp.race = $2
+        AND ranked = True
       GROUP BY bo.building
       ORDER BY bo.count DESC;
       `;

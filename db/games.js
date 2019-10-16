@@ -238,7 +238,8 @@ module.exports = {
   async findGamesBySteamID(steamID, limit = 100, offset = 0) {
     try {
       const sql_query = `
-      SELECT g.*, 
+      SELECT *
+      FROM (SELECT g.*, 
         team,
         array_agg('['|| race || ']') as races,
         COUNT(DISTINCT case when round_winner = 2 then round_number end) as west_wins,
@@ -253,8 +254,16 @@ module.exports = {
         USING (player_id)
         WHERE steam_id = $1
         GROUP BY g.game_id, team
-        ORDER BY created_at DESC
-        LIMIT $2 OFFSET $3;
+        ORDER BY created_at DESC) e1
+      JOIN LATERAL (
+        SELECT
+        COUNT(DISTINCT case when rp.team = 2 then player_id end) as west_players,
+        COUNT(DISTINCT case when rp.team = 3 then player_id end) as east_players
+        FROM round_players rp
+        WHERE rp.game_id = e1.game_id
+      ) as e2 ON true
+      ORDER BY created_at DESC
+      LIMIT $2 OFFSET $3;
       `;
       const { rows } = await query(sql_query, [steamID, limit, offset]);
       return rows;
@@ -262,14 +271,20 @@ module.exports = {
       throw error;
     }
   },
-  async getNumPlayerRounds() {
+  async getNumPlayerRounds(hours, ranked) {
     try {
+      let whereClause = "WHERE round_players.player_id IS NOT NULL";
+      if (hours)
+        whereClause = `${whereClause} AND created_at >= NOW() - $1 * INTERVAL '1 HOURS'`;
+      if (ranked) whereClause = `${whereClause} AND ranked = True`;
       const sql_query = `
       SELECT count(*)
       FROM round_players
-      WHERE round_players.player_id IS NOT NULL;
+      JOIN games
+      USING (game_id)
+      ${whereClause};
       `;
-      const { rows } = await query(sql_query);
+      const { rows } = await query(sql_query, [hours]);
       return rows[0];
     } catch (error) {
       throw error;
@@ -394,16 +409,23 @@ module.exports = {
       throw error;
     }
   },
-  async getRaceCounts() {
+  async getRaceCounts(hours) {
     try {
+      let timeClause = "";
+      if (hours) {
+        timeClause = "AND created_at >= NOW() - $1 * INTERVAL '1 HOURS'";
+      }
       const sql_query = `
       WITH race_wins AS
       (SELECT race, count(race)
         FROM rounds
         JOIN round_players
         USING (game_id, round_number)
+        JOIN games
+        USING (game_id)
         WHERE round_players.team = rounds.round_winner
           AND player_id IS NOT NULL
+          ${timeClause}
         GROUP BY race
       ),
       total_rounds AS
@@ -412,7 +434,10 @@ module.exports = {
         FROM rounds
         JOIN round_players
         USING (game_id, round_number)
+        JOIN games
+        USING (game_id)
         WHERE player_id IS NOT NULL
+          ${timeClause}
         GROUP BY race)
       )
       SELECT race_wins.race,
@@ -424,23 +449,30 @@ module.exports = {
         ON race_wins.race = total_rounds.race
         ORDER BY percentage DESC;
       `;
-      const { rows } = await query(sql_query);
+      const { rows } = await query(sql_query, [hours]);
       return rows;
     } catch (error) {
       throw error;
     }
   },
-  async getRaceStats(race) {
+  async getRaceStats(race, hours) {
     try {
+      let timeClause = "";
+      if (hours) {
+        timeClause = "AND created_at >= NOW() - $2 * INTERVAL '1 HOURS'";
+      }
       const sql_query = `
       WITH race_wins AS
       (SELECT race, count(race)
         FROM rounds
         JOIN round_players
         USING (game_id, round_number)
+        JOIN games
+        USING (game_id)
         WHERE round_players.team = rounds.round_winner
           AND player_id IS NOT NULL
           AND race = $1
+          ${timeClause}
         GROUP BY race
       ),
       total_rounds AS
@@ -449,8 +481,11 @@ module.exports = {
         FROM rounds
         JOIN round_players
         USING (game_id, round_number)
+        JOIN games
+        USING (game_id)
         WHERE player_id IS NOT NULL
           AND race = $1
+          ${timeClause}
         GROUP BY race)
       )
       SELECT race_wins.race,
@@ -461,14 +496,17 @@ module.exports = {
         JOIN total_rounds
         ON race_wins.race = total_rounds.race;
       `;
-      const { rows } = await query(sql_query, [race]);
+      const { rows } = await query(sql_query, [race, hours]);
       return rows;
     } catch (error) {
       throw error;
     }
   },
-  async getRaceBuildingStats(race) {
+  async getRaceBuildingStats(race, hours) {
     try {
+      let timeClause = "";
+      if (hours)
+        timeClause = "AND created_at >= NOW() - $2 * INTERVAL '1 HOURS'";
       const sql_query = `
       SELECT bo.building,
         count(*),
@@ -478,21 +516,27 @@ module.exports = {
       FROM round_players rp
         JOIN players p
         USING (player_id)
+        JOIN games
+        USING (game_id)
         JOIN rounds r
         USING (game_id, round_number),
           unnest(rp.build_order) bo	
       WHERE rp.race = $1
+        ${timeClause}
       GROUP BY bo.building
       ORDER BY bo.count DESC;
       `;
-      const { rows } = await query(sql_query, [race]);
+      const { rows } = await query(sql_query, [race, hours]);
       return rows;
     } catch (error) {
       throw error;
     }
   },
-  async getRaceFirstBuildingStats(race) {
+  async getRaceFirstBuildingStats(race, hours) {
     try {
+      let timeClause = "";
+      if (hours)
+        timeClause = "AND created_at >= NOW() - $2 * INTERVAL '1 HOURS'";
       const sql_query = `
       SELECT build_order[1].building,
         count(*),
@@ -502,11 +546,14 @@ module.exports = {
       USING (player_id)
       JOIN rounds r
       USING (game_id, round_number)
+      JOIN games
+      USING (game_id)
       WHERE race = $1
+        ${timeClause}
       GROUP BY build_order[1].building
       ORDER BY build_order[1].count DESC;
       `;
-      const { rows } = await query(sql_query, [race]);
+      const { rows } = await query(sql_query, [race, hours]);
       return rows;
     } catch (error) {
       throw error;

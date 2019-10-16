@@ -2,6 +2,7 @@
   <div>
     <h1>{{$route.params.race}}</h1>
     <img class="race-header-image" v-bind:src="imagePath" v-bind:alt="$route.params.race" />
+    <v-select :items="timeSelects" label="This Month" solo v-on:change="onTimeFilterSelected" dense></v-select>
     <div class="d-flex flex-row justify-center my-2 px-2">
       <v-card flat tile class="mr-2">
         <v-container>
@@ -38,35 +39,65 @@ export default {
     allBuildings: [],
     firstBuildings: [],
     raceStats: [],
-    totalPlayerRounds: 0
+    totalPlayerRounds: 0,
+    timeSelects: ["This Month", "This Week", "Past 24 Hours"]
   }),
   components: {
     BuildingStats
   },
 
   mounted() {
-    fetch(`${API_URL}/${this.$route.params.race}/all_buildings`)
-      .then(res => res.json())
-      .then(allBuildings => {
-        this.allBuildings = this.parseBuildings(allBuildings);
-      });
-    fetch(`${API_URL}/${this.$route.params.race}/first_buildings`)
-      .then(res => res.json())
-      .then(firstBuildings => {
-        this.firstBuildings = this.parseBuildings(firstBuildings);
-      });
-    fetch(`${API_URL}/${this.$route.params.race}`)
-      .then(res => res.json())
-      .then(raceStats => {
-        this.raceStats = raceStats[0];
-      });
-    fetch(`/api/games/records/num_player_rounds`)
-      .then(res => res.json())
-      .then(totalPlayerRounds => {
-        this.totalPlayerRounds = parseInt(totalPlayerRounds.count);
-      });
+    this.getContent(24 * 31);
   },
+
   methods: {
+    getContent(hours) {
+      fetch(
+        `${API_URL}/${this.$route.params.race}/all_buildings?hours=${hours}`
+      )
+        .then(res => res.json())
+        .then(allBuildings => {
+          this.allBuildings = this.parseBuildings(allBuildings);
+        });
+      fetch(
+        `${API_URL}/${this.$route.params.race}/first_buildings?hours=${hours}`
+      )
+        .then(res => res.json())
+        .then(firstBuildings => {
+          this.firstBuildings = this.parseBuildings(firstBuildings);
+        });
+      fetch(`${API_URL}/${this.$route.params.race}?hours=${hours}`)
+        .then(res => res.json())
+        .then(raceStats => {
+          this.raceStats = raceStats[0];
+          if (!raceStats[0]) {
+            this.raceStats = {
+              percentage: "0",
+              rounds: "0",
+              wins: "0"
+            };
+          }
+        });
+      fetch(`/api/games/records/num_player_rounds?hours=${hours}`)
+        .then(res => res.json())
+        .then(totalPlayerRounds => {
+          this.totalPlayerRounds = parseInt(totalPlayerRounds.count);
+        });
+    },
+    getHoursForLabel(label) {
+      switch (label) {
+        case "This Month":
+          return 24 * 31;
+        case "This Week":
+          return 24 * 7;
+        case "Past 24 Hours":
+          return 24;
+      }
+    },
+    onTimeFilterSelected(label) {
+      const hours = this.getHoursForLabel(label);
+      this.getContent(hours);
+    },
     parseBuildings(buildings) {
       const maxCount = Math.max.apply(
         Math,

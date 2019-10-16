@@ -13,7 +13,8 @@ String.prototype.capitalize = function() {
 
 router.get("/", cacheWithRedis("1 day"), async (req, res) => {
   try {
-    const rows = await games.getRaceCounts();
+    const hours = parseInt(req.query.hours);
+    const rows = await games.getRaceCounts(hours);
     res.status(200).json(rows);
   } catch (error) {
     console.log(error);
@@ -23,8 +24,9 @@ router.get("/", cacheWithRedis("1 day"), async (req, res) => {
 
 router.get("/:race", cacheWithRedis("1 day"), async (req, res) => {
   try {
+    const hours = parseInt(req.query.hours);
     const race = req.params.race.capitalize();
-    let rows = await games.getRaceStats(race);
+    let rows = await games.getRaceStats(race, hours);
     res.status(200).json(rows);
   } catch (error) {
     console.log(error);
@@ -37,8 +39,9 @@ router.get(
   cacheWithRedis("1 day"),
   async (req, res) => {
     try {
+      const hours = parseInt(req.query.hours);
       const race = req.params.race.capitalize();
-      let rows = await games.getRaceBuildingStats(race);
+      let rows = await games.getRaceBuildingStats(race, hours);
       rows = rows.map(stats => {
         return {
           ...stats,
@@ -58,8 +61,9 @@ router.get(
   cacheWithRedis("1 day"),
   async (req, res) => {
     try {
+      const hours = parseInt(req.query.hours);
       const race = req.params.race.capitalize();
-      let rows = await games.getRaceFirstBuildingStats(race);
+      let rows = await games.getRaceFirstBuildingStats(race, hours);
       rows = rows.map(stats => {
         return {
           ...stats,

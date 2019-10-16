@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-row>
-      <v-img src="../assets/preview_image.png" max-height="300" class="hidden-sm-and-down"></v-img>
+      <v-img src="../assets/preview_image.jpg" max-height="300" class="hidden-sm-and-down"></v-img>
     </v-row>
     <v-row class="mt-4 mx-auto" align="center" justify="center">
       <v-btn
