@@ -51,6 +51,28 @@ module.exports = {
       throw error;
     }
   },
+  async getNumRoundsByRace(steamID, race) {
+    try {
+      const sql_query = `
+      SELECT 
+        COUNT(DISTINCT(rp.game_id, rp.round_number)) as num_rounds
+      FROM players as p
+        JOIN round_players as rp
+        ON p.player_id = rp.player_id
+        JOIN games as g
+        ON g.game_id = rp.game_id
+        JOIN rounds as r
+        ON (r.game_id, r.round_number) = (rp.game_id, rp.round_number)
+        WHERE p.steam_id = $1
+          AND race = $2
+          AND ranked = True
+      `;
+      const { rows } = await query(sql_query, [steamID, race]);
+      return rows[0];
+    } catch (error) {
+      throw error;
+    }
+  },
   async searchPlayersByUsername(username) {
     try {
       const sql_query = `

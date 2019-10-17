@@ -3,7 +3,7 @@
     <h1>{{$route.params.race}}</h1>
     <img class="race-header-image" v-bind:src="imagePath" v-bind:alt="$route.params.race" />
     <v-select :items="timeSelects" label="This Month" solo v-on:change="onTimeFilterSelected" dense></v-select>
-    <div class="d-flex flex-row justify-center my-2 px-2">
+    <div class="d-flex flex-row justify-center my-3 mt-n4 px-2">
       <v-card flat tile class="mr-2">
         <v-container>
           <div class="header">{{raceStats.rounds / totalPlayerRounds | percentage}}</div>
