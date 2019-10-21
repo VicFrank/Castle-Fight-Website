@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-simple-table height="675px" class="games-list-table">
+    <v-simple-table class="games-list-table">
       <template v-slot:default>
         <thead>
           <tr>
@@ -11,12 +11,15 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="game in games" :key="game.game_id">
-            <td class="game-column">
+          <tr
+            v-for="game in games.slice(itemsPerPage * (page - 1), itemsPerPage * page)"
+            :key="game.game_id"
+          >
+            <td>
               <router-link :to="'/games/' + game.game_id">{{game.game_id}}</router-link>
               <div class="caption">{{game.created_at | dateFromNow}}</div>
             </td>
-            <td class="caption settings-column">
+            <td>
               <div v-if="game.ranked ">
                 <span v-if="game.ranked">Ranked</span>
                 <span v-else>Unranked</span>
@@ -24,7 +27,7 @@
               </div>
               {{game.west_players}}v{{game.east_players}}
             </td>
-            <td class="result-column caption">
+            <td>
               <div v-if="game.winning_team === game.team" class="west-color">Won Match</div>
               <div v-if="game.winning_team !== game.team" class="east-color">Lost Match</div>
               <div>{{getRoundResults(game)}}</div>
@@ -38,6 +41,13 @@
         </tbody>
       </template>
     </v-simple-table>
+    <div class="text-center">
+      <v-pagination
+        v-model="page"
+        :length="Math.ceil(games.length / itemsPerPage)"
+        :total-visible="7"
+      ></v-pagination>
+    </div>
   </div>
 </template>
 
@@ -45,7 +55,11 @@
 import RaceLink from "../races/RaceLink";
 
 export default {
-  data: () => ({}),
+  data: () => ({
+    page: 1,
+    itemsPerPage: 15,
+    gamesToShow: []
+  }),
 
   props: {
     games: Array
@@ -79,5 +93,13 @@ export default {
 <style scoped>
 th {
   text-align: center !important;
+}
+
+.race-column {
+  text-align: left;
+  width: 200px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
 }
 </style>

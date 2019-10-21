@@ -35,6 +35,10 @@ thead {
   background-color: #4e403a;
 }
 
+.sortable {
+  cursor: pointer;
+}
+
 tbody > tr:nth-child(even) {
   background-color: #2e2724;
 }

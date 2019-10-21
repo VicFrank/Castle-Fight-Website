@@ -37,17 +37,17 @@
       </v-card>
     </v-card>
     <!-- Tabs -->
-    <v-tabs fixed-tabs>
+    <v-tabs grow hide-slider>
       <v-tab>Games</v-tab>
       <v-tab>Picks</v-tab>
       <v-tab>Building Stats</v-tab>
 
       <!-- Game Content -->
       <v-tab-item>
-        <RaceStats v-bind:raceStats="races" v-bind:numRounds="playerInfo.num_rounds | toNumber"></RaceStats>
+        <PlayerGamesList v-bind:games="games" v-bind:showRaces="true"></PlayerGamesList>
       </v-tab-item>
       <v-tab-item>
-        <PlayerGamesList v-bind:games="games" v-bind:showRaces="true"></PlayerGamesList>
+        <RaceStats v-bind:raceStats="races" v-bind:numRounds="playerInfo.num_rounds | toNumber"></RaceStats>
       </v-tab-item>
       <!-- Building Stats Content -->
       <v-tab-item>
@@ -121,7 +121,7 @@ export default {
         .then(buildings => {
           this.firstBuildings = buildings.firstBuildings;
           this.allBuildings = buildings.allBuildings;
-          this.numRaceRounds = buildings.numRaceRounds;
+          this.numRaceRounds = buildings.numRounds;
         });
     },
     onRaceSelected(race) {
@@ -144,10 +144,6 @@ export default {
 }
 
 h2 {
-  padding: 5px;
-}
-
-.content {
   padding: 5px;
 }
 

@@ -1,7 +1,7 @@
 <template>
   <v-tooltip top>
     <template v-slot:activator="{ on }">
-      <div class="segment" v-bind:style="{width: width}" v-on="on"></div>
+      <div class="segment" v-bind:style="{width: getWidth}" v-on="on"></div>
     </template>
     <span>{{width}}</span>
   </v-tooltip>
@@ -9,7 +9,19 @@
 <script>
 export default {
   props: {
+    percent: String,
+    min: Number,
+    max: Number,
+    value: [Number, String],
     width: String
+  },
+
+  computed: {
+    getWidth: function() {
+      if (this.width) return this.width;
+      const percent = (100 * this.value) / this.max;
+      return `${percent}%`;
+    }
   }
 };
 </script>
