@@ -1,5 +1,11 @@
 <template>
-  <v-data-table :headers="headers" :items="raceStats" :hide-default-footer="true" :must-sort="true">
+  <v-data-table
+    :headers="headers"
+    :items="raceStats"
+    :hide-default-footer="true"
+    :must-sort="true"
+    items-per-page="11"
+  >
     <template v-slot:item.race="{ item }">
       <RaceLink v-bind:race="item.race"></RaceLink>
     </template>
