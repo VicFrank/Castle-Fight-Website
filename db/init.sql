@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS games (
   created_at TIMESTAMPTZ DEFAULT Now()
 );
 
+CREATE INDEX ix_games_created_at ON games (created_at);
+
 CREATE TABLE IF NOT EXISTS players (
   player_id SERIAL PRIMARY KEY,
   steam_id TEXT UNIQUE NOT NULL,
@@ -23,6 +25,8 @@ CREATE TABLE IF NOT EXISTS players (
   username TEXT,
   profile_picture TEXT
 );
+
+CREATE INDEX ix_players_mmr ON players (mmr);
 
 CREATE TABLE IF NOT EXISTS game_players (
   game_id INTEGER REFERENCES games (game_id) ON UPDATE CASCADE,
@@ -36,6 +40,8 @@ CREATE TABLE IF NOT EXISTS rounds (
   round_winner INT,
   duration INT
 );
+
+CREATE INDEX ix_rounds_game_id_round_number ON rounds (game_id, round_number);
 
 CREATE TYPE build_event AS (
   building TEXT,
@@ -54,3 +60,6 @@ CREATE TABLE IF NOT EXISTS round_players (
   income INT,
   build_order build_event []
 );
+
+CREATE INDEX ix_round_players_team ON round_players (team);
+CREATE INDEX ix_round_players_game_id_round_number ON round_players (game_id, round_number);

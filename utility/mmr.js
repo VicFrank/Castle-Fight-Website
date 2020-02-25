@@ -10,6 +10,9 @@ module.exports = {
     const Pa = probability(winnerRank, loserRank);
     const ratingChange = Math.floor(K * (1 - Pa), 1);
 
+    // Always return at least some mmr change
+    if (ratingChange === 0) return 1;
+
     return ratingChange;
   }
 };

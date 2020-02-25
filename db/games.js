@@ -57,7 +57,7 @@ module.exports = {
           roundNumber,
           winner: roundWinner,
           duration,
-          playerStats
+          playerStats,
         } = round;
         // console.log(`Inserting round ${roundNumber}`);
         await query(
@@ -68,7 +68,7 @@ module.exports = {
 
         let mmrData = {
           west: [],
-          east: []
+          east: [],
         };
 
         for (let roundPlayer of playerStats) {
@@ -80,7 +80,7 @@ module.exports = {
             unitsKilled,
             abandoned,
             income,
-            buildOrder
+            buildOrder,
           } = roundPlayer;
 
           // this will be undefined if there is a bot, but if there is a bot
@@ -115,7 +115,7 @@ module.exports = {
               unitsKilled,
               abandoned,
               income,
-              buildOrderRows
+              buildOrderRows,
             ]
           );
         }
@@ -217,7 +217,7 @@ module.exports = {
       // parse the build order list for each round player
       const parsedPlayerRows = playerRows.map(player => ({
         ...player,
-        build_order: parseBuildEvent(player.build_order)
+        build_order: parseBuildEvent(player.build_order),
       }));
       for (let roundPlayer of parsedPlayerRows) {
         let roundNumber = roundPlayer.round_number;
@@ -238,6 +238,16 @@ module.exports = {
   async findGamesBySteamID(steamID, limit = 100, offset = 0) {
     try {
       const sql_query = `
+      WITH recent_games AS (
+        SELECT games.* from games
+        JOIN game_players
+        USING (game_id)
+        JOIN players
+        USING (player_id)
+        WHERE players.steam_id = $1
+        ORDER BY created_at DESC
+        LIMIT $2 OFFSET $3
+      )
       SELECT *
       FROM (SELECT g.*, 
         team,
@@ -246,24 +256,25 @@ module.exports = {
         COUNT(DISTINCT case when round_winner = 3 then round_number end) as east_wins,
         COUNT(DISTINCT case when round_winner = 4 then round_number end) as draws
         FROM round_players rp
-        JOIN games g
+        JOIN recent_games g
         USING (game_id)
-        JOIN rounds r
+        JOIN rounds
         USING (round_number, game_id)
-        JOIN players p
-        USING (player_id)
-        WHERE steam_id = $1
-        GROUP BY g.game_id, team
-        ORDER BY created_at DESC) e1
+        GROUP BY g.game_id, team,
+          g.game_id,
+          g.winning_team,
+          g.ranked,
+          g.rounds_to_win,
+          g.allow_bots,
+          g.cheats_enabled,
+          g.created_at) e1
       JOIN LATERAL (
         SELECT
         COUNT(DISTINCT case when rp.team = 2 then player_id end) as west_players,
         COUNT(DISTINCT case when rp.team = 3 then player_id end) as east_players
         FROM round_players rp
         WHERE rp.game_id = e1.game_id
-      ) as e2 ON true
-      ORDER BY created_at DESC
-      LIMIT $2 OFFSET $3;
+      ) as e2 ON true;
       `;
       const { rows } = await query(sql_query, [steamID, limit, offset]);
       return rows;
@@ -379,22 +390,28 @@ module.exports = {
         whereClause = "WHERE created_at >= NOW() - $3 * INTERVAL '1 HOURS'";
       }
       const sql_query = `
-      SELECT g.*, 
+      WITH recent_games AS (SELECT * FROM games ${whereClause} ORDER BY created_at DESC LIMIT $1 OFFSET $2)
+      SELECT 
+        recent_games.*,
         array_agg('[' || round_number || ','|| race || ',' || team || ']') as races,
         COUNT(DISTINCT case when round_winner = 2 then round_number end) as west_wins,
         COUNT(DISTINCT case when round_winner = 3 then round_number end) as east_wins,
         COUNT(DISTINCT case when round_winner = 4 then round_number end) as draws,
         COUNT(DISTINCT case when team = 2 then player_id end) as west_players,
         COUNT(DISTINCT case when team = 3 then player_id end) as east_players
-        FROM round_players rp
-        JOIN games g
+        FROM recent_games
+        JOIN round_players rp
         USING (game_id)
         JOIN rounds r
         USING (round_number, game_id)
-        ${whereClause}
-        GROUP BY g.game_id
-        ORDER BY created_at DESC
-        LIMIT $1 OFFSET $2;
+      GROUP BY
+        recent_games.game_id,
+        recent_games.winning_team,
+        recent_games.ranked,
+        recent_games.rounds_to_win,
+        recent_games.allow_bots,
+        recent_games.cheats_enabled,
+        recent_games.created_at
       `;
       let result;
       if (hours) {
@@ -558,5 +575,5 @@ module.exports = {
     } catch (error) {
       throw error;
     }
-  }
+  },
 };
