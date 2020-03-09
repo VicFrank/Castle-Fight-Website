@@ -235,31 +235,33 @@ module.exports = {
       throw error;
     }
   },
-  async findGamesBySteamID(steamID, limit = 100, offset = 0) {
+  async findGamesBySteamID(steamID, limit = 1000, offset = 0) {
     try {
       const sql_query = `
-      WITH recent_games AS (
+      WITH player_games AS (
         SELECT games.* from games
         JOIN game_players
         USING (game_id)
         JOIN players
         USING (player_id)
         WHERE players.steam_id = $1
-        ORDER BY created_at DESC
         LIMIT $2 OFFSET $3
       )
-      SELECT *
+      SELECT e1.*
       FROM (SELECT g.*, 
         team,
         array_agg('['|| race || ']') as races,
         COUNT(DISTINCT case when round_winner = 2 then round_number end) as west_wins,
         COUNT(DISTINCT case when round_winner = 3 then round_number end) as east_wins,
         COUNT(DISTINCT case when round_winner = 4 then round_number end) as draws
-        FROM round_players rp
-        JOIN recent_games g
+        FROM player_games g
+        JOIN round_players rp
         USING (game_id)
         JOIN rounds
         USING (round_number, game_id)
+        JOIN players
+        USING (player_id)
+        WHERE players.steam_id = $1
         GROUP BY g.game_id, team,
           g.game_id,
           g.winning_team,
@@ -267,14 +269,16 @@ module.exports = {
           g.rounds_to_win,
           g.allow_bots,
           g.cheats_enabled,
-          g.created_at) e1
+          g.created_at
+      ) e1
       JOIN LATERAL (
         SELECT
         COUNT(DISTINCT case when rp.team = 2 then player_id end) as west_players,
         COUNT(DISTINCT case when rp.team = 3 then player_id end) as east_players
         FROM round_players rp
         WHERE rp.game_id = e1.game_id
-      ) as e2 ON true;
+      ) as e2 ON true
+      ORDER BY created_at DESC;      
       `;
       const { rows } = await query(sql_query, [steamID, limit, offset]);
       return rows;

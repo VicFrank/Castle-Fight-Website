@@ -26,6 +26,14 @@ module.exports = {
       SELECT * FROM players
         WHERE steam_id = $1
       ),
+      player_games AS (
+        SELECT games.* from games
+        JOIN game_players
+        USING (game_id)
+        JOIN players
+        USING (player_id)
+        WHERE players.steam_id = $1
+      ),
       game_stats AS
       (
       SELECT 
@@ -36,7 +44,7 @@ module.exports = {
       FROM players as p
         JOIN round_players as rp
         ON p.player_id = rp.player_id
-        JOIN games as g
+        JOIN player_games as g
         ON g.game_id = rp.game_id
         JOIN rounds as r
         ON (r.game_id, r.round_number) = (rp.game_id, rp.round_number)
@@ -54,12 +62,20 @@ module.exports = {
   async getNumRoundsByRace(steamID, race) {
     try {
       const sql_query = `
+      WITH player_games AS (
+        SELECT games.* from games
+        JOIN game_players
+        USING (game_id)
+        JOIN players
+        USING (player_id)
+        WHERE players.steam_id = $1
+      )
       SELECT 
         COUNT(DISTINCT(rp.game_id, rp.round_number)) as num_rounds
       FROM players as p
         JOIN round_players as rp
         ON p.player_id = rp.player_id
-        JOIN games as g
+        JOIN player_games as g
         ON g.game_id = rp.game_id
         JOIN rounds as r
         ON (r.game_id, r.round_number) = (rp.game_id, rp.round_number)
@@ -105,18 +121,26 @@ module.exports = {
   async getNumRacesPicked(steamID) {
     try {
       const sql_query = `
-      WITH race_wins AS
+      WITH player_games AS (
+        SELECT games.* from games
+        JOIN game_players
+        USING (game_id)
+        JOIN players
+        USING (player_id)
+        WHERE players.steam_id = $1
+      ),
+      race_wins AS
       (SELECT race, count(race)
         FROM rounds
         JOIN round_players
         USING (game_id, round_number)
         JOIN players
         USING (player_id)
-        JOIN games
+        JOIN player_games
         USING (game_id)
         WHERE round_players.team = rounds.round_winner
           AND ranked = True
-	   		  AND players.steam_id = $1
+          AND players.steam_id = $1
         GROUP BY race
       ),
       total_rounds AS
@@ -125,7 +149,7 @@ module.exports = {
         FROM round_players
         JOIN players
         USING (player_id)
-        JOIN games
+        JOIN player_games
         USING (game_id)
         WHERE players.steam_id = $1
           AND ranked = True
@@ -146,20 +170,28 @@ module.exports = {
   async getFirstBuildingCounts(steamID) {
     try {
       const sql_query = `
-      SELECT build_order[1].building,
-          count(*),
-          COUNT(case when r.round_winner = rp.team then (rp.game_id, rp.round_number) end) as wins
-        FROM round_players rp
-        JOIN players p
-        USING (player_id)
-        JOIN rounds r
-        USING (game_id, round_number)
-        JOIN games
+      WITH player_games AS (
+        SELECT games.* from games
+        JOIN game_players
         USING (game_id)
-        WHERE p.steam_id = $1
-          AND ranked = True
-        GROUP BY build_order[1].building
-        ORDER BY build_order[1].count DESC;
+        JOIN players
+        USING (player_id)
+        WHERE players.steam_id = $1
+      )
+      SELECT build_order[1].building,
+        count(*),
+        COUNT(case when r.round_winner = rp.team then (rp.game_id, rp.round_number) end) as wins
+      FROM round_players rp
+      JOIN players p
+      USING (player_id)
+      JOIN rounds r
+      USING (game_id, round_number)
+      JOIN player_games
+      USING (game_id)
+      WHERE p.steam_id = $1
+        AND ranked = True
+      GROUP BY build_order[1].building
+      ORDER BY build_order[1].count DESC;
       `;
       const { rows } = await query(sql_query, [steamID]);
       return rows;
@@ -170,6 +202,14 @@ module.exports = {
   async getBuildingCounts(steamID) {
     try {
       const sql_query = `
+      WITH player_games AS (
+        SELECT games.* from games
+        JOIN game_players
+        USING (game_id)
+        JOIN players
+        USING (player_id)
+        WHERE players.steam_id = $1
+      )
       SELECT bo.building,
         count(*),
         COUNT(DISTINCT(rp.game_id, rp.round_number)) as num_rounds,
@@ -178,11 +218,11 @@ module.exports = {
       FROM round_players rp
         JOIN players p
         USING (player_id)
-        JOIN games
+        JOIN player_games
         USING (game_id)
         JOIN rounds r
         USING (game_id, round_number),
-          unnest(rp.build_order) bo	
+          unnest(rp.build_order) bo 
       WHERE p.steam_id = $1
         AND ranked = True
       GROUP BY bo.building
@@ -197,6 +237,14 @@ module.exports = {
   async getFirstBuildingCountsByRace(steamID, race) {
     try {
       const sql_query = `
+      WITH player_games AS (
+        SELECT games.* from games
+        JOIN game_players
+        USING (game_id)
+        JOIN players
+        USING (player_id)
+        WHERE players.steam_id = $1
+      )
       SELECT build_order[1].building,
           count(*),
           COUNT(case when r.round_winner = rp.team then (rp.game_id, rp.round_number) end) as wins
@@ -205,7 +253,7 @@ module.exports = {
         USING (player_id)
         JOIN rounds r
         USING (game_id, round_number)
-        JOIN games
+        JOIN player_games
         USING (game_id)
         WHERE p.steam_id = $1
           AND rp.race = $2
@@ -222,6 +270,14 @@ module.exports = {
   async getBuildingCountsByRace(steamID, race) {
     try {
       const sql_query = `
+      WITH player_games AS (
+        SELECT games.* from games
+        JOIN game_players
+        USING (game_id)
+        JOIN players
+        USING (player_id)
+        WHERE players.steam_id = $1
+      )
       SELECT bo.building,
         count(*),
         COUNT(DISTINCT(rp.game_id, rp.round_number)) as num_rounds,
@@ -230,7 +286,7 @@ module.exports = {
       FROM round_players rp
         JOIN players p
         USING (player_id)
-        JOIN games
+        JOIN player_games
         USING (game_id)
         JOIN rounds r
         USING (game_id, round_number),
@@ -246,5 +302,5 @@ module.exports = {
     } catch (error) {
       throw error;
     }
-  }
+  },
 };
