@@ -247,7 +247,7 @@ module.exports = {
         WHERE players.steam_id = $1
         LIMIT $2 OFFSET $3
       )
-      SELECT e1.*
+      SELECT *
       FROM (SELECT g.*, 
         team,
         array_agg('['|| race || ']') as races,
@@ -278,7 +278,7 @@ module.exports = {
         FROM round_players rp
         WHERE rp.game_id = e1.game_id
       ) as e2 ON true
-      ORDER BY created_at DESC;      
+      ORDER BY created_at DESC;
       `;
       const { rows } = await query(sql_query, [steamID, limit, offset]);
       return rows;
