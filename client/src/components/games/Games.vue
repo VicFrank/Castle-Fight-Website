@@ -15,17 +15,17 @@ export default {
   name: "games",
   data: () => ({
     error: "",
-    games: []
+    games: [],
   }),
 
   components: {
-    GamesList
+    GamesList,
   },
 
   mounted() {
     fetch(API_URL)
-      .then(res => res.json())
-      .then(games => {
+      .then((res) => res.json())
+      .then((games) => {
         this.games = games;
       });
   },
@@ -57,15 +57,15 @@ export default {
         results = `${results}-${draws}`;
       }
       return results;
-    }
+    },
   },
 
   computed: {
     playerWidth() {
       if (this.$vuetify.breakpoint.xsOnly) return "200px";
       else return "360px";
-    }
-  }
+    },
+  },
 };
 </script>
 

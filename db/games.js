@@ -9,14 +9,14 @@ module.exports = {
       let playerIDtoMMR = {};
 
       const { playerInfo, settings, winner, ranked, rounds } = gameData;
-      const { roundsToWin, allowBots, cheatsEnabled } = settings;
+      const { roundsToWin, allowBots, cheatsEnabled, draftMode } = settings;
 
       // Insert the game into the table
       const { rows: gameRows } = await query(
-        `INSERT INTO games (winning_team, ranked, rounds_to_win, allow_bots, cheats_enabled)
-         VALUES ($1, $2, $3, $4, $5)
+        `INSERT INTO games (winning_team, ranked, rounds_to_win, allow_bots, cheats_enabled, draft_mode)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING game_id`,
-        [winner, ranked, roundsToWin, allowBots, cheatsEnabled]
+        [winner, ranked, roundsToWin, allowBots, cheatsEnabled, draftMode]
       );
 
       // console.log(gameRows);
@@ -96,7 +96,8 @@ module.exports = {
 
           // parse the build order into an array of rows for postgres
           const buildOrderRows = buildOrder.map(
-            buildEvent => `('${buildEvent.building}', ${buildEvent.buildTime})`
+            (buildEvent) =>
+              `('${buildEvent.building}', ${buildEvent.buildTime})`
           );
 
           // console.log(
@@ -209,13 +210,13 @@ module.exports = {
           WHERE game_id = $1`,
         [gameID]
       );
-      rows.map(row => {
+      rows.map((row) => {
         row.players = {};
         row.players.west = [];
         row.players.east = [];
       });
       // parse the build order list for each round player
-      const parsedPlayerRows = playerRows.map(player => ({
+      const parsedPlayerRows = playerRows.map((player) => ({
         ...player,
         build_order: parseBuildEvent(player.build_order),
       }));
@@ -269,7 +270,8 @@ module.exports = {
           g.rounds_to_win,
           g.allow_bots,
           g.cheats_enabled,
-          g.created_at
+          g.created_at,
+          g.draft_mode
       ) e1
       JOIN LATERAL (
         SELECT
@@ -391,10 +393,10 @@ module.exports = {
     try {
       let whereClause = "";
       if (hours) {
-        whereClause = "WHERE created_at >= NOW() - $3 * INTERVAL '1 HOURS'";
+        timeClause = `AND created_at >= NOW() - $3 * INTERVAL '1 HOURS'`;
       }
       const sql_query = `
-      WITH recent_games AS (SELECT * FROM games ${whereClause} ORDER BY created_at DESC LIMIT $1 OFFSET $2)
+      WITH recent_games AS (SELECT * FROM games ${whereClause} ORDER BY created_at LIMIT $1 OFFSET $2)
       SELECT 
         recent_games.*,
         array_agg('[' || round_number || ','|| race || ',' || team || ']') as races,
@@ -415,7 +417,8 @@ module.exports = {
         recent_games.rounds_to_win,
         recent_games.allow_bots,
         recent_games.cheats_enabled,
-        recent_games.created_at
+        recent_games.created_at,
+        recent_games.draft_mode
       `;
       let result;
       if (hours) {
@@ -430,11 +433,12 @@ module.exports = {
       throw error;
     }
   },
-  async getRaceCounts(hours) {
+  async getRaceCounts(hours, hours2 = 0) {
     try {
       let timeClause = "";
       if (hours) {
-        timeClause = "AND created_at >= NOW() - $1 * INTERVAL '1 HOURS'";
+        timeClause = `AND created_at >= NOW() - $1 * INTERVAL '1 HOURS'
+          AND created_at <= NOW() - $2 * INTERVAL '1 HOURS'`;
       }
       const sql_query = `
       WITH race_wins AS
@@ -470,17 +474,18 @@ module.exports = {
         ON race_wins.race = total_rounds.race
         ORDER BY percentage DESC;
       `;
-      const { rows } = await query(sql_query, [hours]);
+      const { rows } = await query(sql_query, [hours, hours2]);
       return rows;
     } catch (error) {
       throw error;
     }
   },
-  async getRaceStats(race, hours) {
+  async getRaceStats(race, hours, hours2 = 0) {
     try {
       let timeClause = "";
       if (hours) {
-        timeClause = "AND created_at >= NOW() - $2 * INTERVAL '1 HOURS'";
+        timeClause = `AND created_at >= NOW() - $2 * INTERVAL '1 HOURS'
+          AND created_at <= NOW() - $3 * INTERVAL '1 HOURS'`;
       }
       const sql_query = `
       WITH race_wins AS
@@ -517,23 +522,25 @@ module.exports = {
         JOIN total_rounds
         ON race_wins.race = total_rounds.race;
       `;
-      const { rows } = await query(sql_query, [race, hours]);
+      const { rows } = await query(sql_query, [race, hours, hours2]);
       return rows;
     } catch (error) {
       throw error;
     }
   },
-  async getRaceBuildingStats(race, hours) {
+  async getRaceBuildingStats(race, hours, hours2 = 0) {
     try {
       let timeClause = "";
-      if (hours)
-        timeClause = "AND created_at >= NOW() - $2 * INTERVAL '1 HOURS'";
+      if (hours) {
+        timeClause = `AND created_at >= NOW() - $2 * INTERVAL '1 HOURS'
+          AND created_at <= NOW() - $3 * INTERVAL '1 HOURS'`;
+      }
       const sql_query = `
       SELECT bo.building,
         count(*),
-        COUNT(DISTINCT(rp.game_id, rp.round_number)) as num_rounds,
-        COUNT(DISTINCT(case when r.round_winner = rp.team then (rp.game_id, rp.round_number) end)) as wins,
-        COUNT(DISTINCT(case when r.round_winner != rp.team then (rp.game_id, rp.round_number) end)) as losses
+        COUNT(DISTINCT(rp.game_id, rp.round_number, p.player_id)) as num_rounds,
+        COUNT(DISTINCT(case when r.round_winner = rp.team then (rp.game_id, rp.round_number, p.player_id) end)) as wins,
+        COUNT(DISTINCT(case when r.round_winner != rp.team then (rp.game_id, rp.round_number, p.player_id) end)) as losses
       FROM round_players rp
         JOIN players p
         USING (player_id)
@@ -547,17 +554,20 @@ module.exports = {
       GROUP BY bo.building
       ORDER BY bo.count DESC;
       `;
-      const { rows } = await query(sql_query, [race, hours]);
+      const { rows } = await query(sql_query, [race, hours, hours2]);
       return rows;
     } catch (error) {
       throw error;
     }
   },
-  async getRaceFirstBuildingStats(race, hours) {
+  async getRaceFirstBuildingStats(race, hours, hours2 = 0) {
     try {
       let timeClause = "";
-      if (hours)
-        timeClause = "AND created_at >= NOW() - $2 * INTERVAL '1 HOURS'";
+      if (hours) {
+        timeClause = `AND created_at >= NOW() - $2 * INTERVAL '1 HOURS'
+          AND created_at <= NOW() - $3 * INTERVAL '1 HOURS'`;
+      }
+
       const sql_query = `
       SELECT build_order[1].building,
         count(*),
@@ -574,7 +584,7 @@ module.exports = {
       GROUP BY build_order[1].building
       ORDER BY build_order[1].count DESC;
       `;
-      const { rows } = await query(sql_query, [race, hours]);
+      const { rows } = await query(sql_query, [race, hours, hours2]);
       return rows;
     } catch (error) {
       throw error;

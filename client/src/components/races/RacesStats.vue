@@ -10,15 +10,15 @@
       <RaceLink v-bind:race="item.race"></RaceLink>
     </template>
     <template v-slot:item.rounds="{ item }">
-      {{item.rounds / numRounds | percentage(1)}}
+      {{ (item.rounds / numRounds) | percentage(1) }}
       <PercentBar
         :max="maxRounds"
         :value="item.rounds | toNumber"
-        v-bind:percent="item.rounds / numRounds | percentage(1)"
+        v-bind:percent="(item.rounds / numRounds) | percentage(1)"
       ></PercentBar>
     </template>
     <template v-slot:item.percentage="{ item }">
-      {{item.percentage | percentage(1)}}
+      {{ item.percentage | percentage(1) }}
       <PercentBar
         :max="maxWinPercent"
         :value="item.percentage"
@@ -37,41 +37,41 @@ export default {
     headers: [
       { text: "Race", value: "race" },
       { text: "Pick Rate", value: "rounds", width: 300 },
-      { text: "Win Rate", value: "percentage", width: 300 }
-    ]
+      { text: "Win Rate", value: "percentage", width: 300 },
+    ],
   }),
 
   computed: {
-    minRounds: function() {
+    minRounds: function () {
       if (this.raceStats.length < 1) return null;
       return this.getMinArray(this.raceStats, "rounds");
     },
-    maxRounds: function() {
+    maxRounds: function () {
       if (this.raceStats.length < 1) return null;
       return this.getMaxArray(this.raceStats, "rounds");
     },
-    minWinPercent: function() {
+    minWinPercent: function () {
       if (this.raceStats.length < 1) return null;
       return this.getMinArray(this.raceStats, "percentage");
     },
-    maxWinPercent: function() {
+    maxWinPercent: function () {
       if (this.raceStats.length < 1) return null;
       return this.getMaxArray(this.raceStats, "percentage");
     },
     columnWidth() {
       if (this.$vuetify.breakpoint.xsOnly) return 100;
       else return 300;
-    }
+    },
   },
 
   props: {
     raceStats: Array,
-    numRounds: Number
+    numRounds: Number,
   },
 
   components: {
     PercentBar,
-    RaceLink
+    RaceLink,
   },
 
   methods: {
@@ -86,8 +86,8 @@ export default {
         (max, b) => Math.max(max, b[property]),
         arr[0][property]
       );
-    }
-  }
+    },
+  },
 };
 </script>
 

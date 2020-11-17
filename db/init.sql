@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS games (
   rounds_to_win INTEGER,
   allow_bots BOOLEAN,
   cheats_enabled BOOLEAN,
+  draft_mode TEXT,
   created_at TIMESTAMPTZ DEFAULT Now()
 );
 

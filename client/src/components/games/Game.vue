@@ -1,23 +1,36 @@
 <template>
   <div>
     <div
-      v-bind:class="{'west-color': gameInfo.winning_team == 2, 'east-color': gameInfo.winning_team == 3}"
+      v-bind:class="{
+        'west-color': gameInfo.winning_team == 2,
+        'east-color': gameInfo.winning_team == 3,
+      }"
       class="display-2 match-result"
       v-if="gameInfo.winning_team"
     >
-      <template v-if="gameInfo.winning_team !== 4">{{gameInfo.winning_team | intToTeam}} Victory</template>
+      <template v-if="gameInfo.winning_team !== 4"
+        >{{ gameInfo.winning_team | intToTeam }} Victory</template
+      >
       <template v-else>Draw</template>
     </div>
     <div v-else-if="!loading" class="display-2 match-result">Unfinished</div>
-    <div class="headline match-result">{{getRoundResults(gameInfo)}}</div>
+    <div v-if="gameInfo.draft_mode" class="match-result">
+      {{ gameInfo.draft_mode }}
+    </div>
+    <div class="headline match-result">{{ getRoundResults(gameInfo) }}</div>
     <div v-for="round in rounds" :key="round.round_number">
       <div class="round-result">
-        Round {{round.round_number}}:
+        Round {{ round.round_number }}:
         <span
-          v-bind:class="{'west-color': round.round_winner == 2, 'east-color': round.round_winner == 3}"
+          v-bind:class="{
+            'west-color': round.round_winner == 2,
+            'east-color': round.round_winner == 3,
+          }"
           class="title"
         >
-          <template v-if="round.round_winner !== 4">{{round.round_winner | intToTeam}} Victory</template>
+          <template v-if="round.round_winner !== 4"
+            >{{ round.round_winner | intToTeam }} Victory</template
+          >
           <template v-else>Draw</template>
         </span>
       </div>
@@ -41,26 +54,26 @@ export default {
     error: "",
     rounds: [],
     gameInfo: {},
-    loading: true
+    loading: true,
   }),
 
   mounted() {
     fetch(`${API_URL}/${this.$route.params.game_id}/rounds`)
-      .then(res => res.json())
-      .then(rounds => {
+      .then((res) => res.json())
+      .then((rounds) => {
         rounds.sort((a, b) => a.round_number - b.round_number);
         this.rounds = rounds;
       });
     fetch(`${API_URL}/${this.$route.params.game_id}`)
-      .then(res => res.json())
-      .then(gameInfo => {
+      .then((res) => res.json())
+      .then((gameInfo) => {
         this.gameInfo = gameInfo;
         this.loading = false;
       });
   },
 
   components: {
-    TeamScoreboard
+    TeamScoreboard,
   },
 
   methods: {
@@ -85,8 +98,8 @@ export default {
     getImagePath(race) {
       const parsedRace = race.toLowerCase().replace(/ /g, "_");
       return require(`../../assets/races/${parsedRace}_full.png`);
-    }
-  }
+    },
+  },
 };
 </script>
 

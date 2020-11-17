@@ -7,14 +7,15 @@ const redis = require("redis");
 let cacheWithRedis = apicache.options({ redisClient: redis.createClient() })
   .middleware;
 
-String.prototype.capitalize = function() {
+String.prototype.capitalize = function () {
   return this.charAt(0).toUpperCase() + this.slice(1);
 };
 
 router.get("/", cacheWithRedis("1 day"), async (req, res) => {
   try {
     const hours = parseInt(req.query.hours);
-    const rows = await games.getRaceCounts(hours);
+    const hours2 = parseInt(req.query.hours2) || 0;
+    const rows = await games.getRaceCounts(hours, hours2);
     res.status(200).json(rows);
   } catch (error) {
     console.log(error);
@@ -25,8 +26,9 @@ router.get("/", cacheWithRedis("1 day"), async (req, res) => {
 router.get("/:race", cacheWithRedis("1 day"), async (req, res) => {
   try {
     const hours = parseInt(req.query.hours);
+    const hours2 = parseInt(req.query.hours2) || 0;
     const race = req.params.race.capitalize();
-    let rows = await games.getRaceStats(race, hours);
+    let rows = await games.getRaceStats(race, hours, hours2);
     res.status(200).json(rows);
   } catch (error) {
     console.log(error);
@@ -40,12 +42,13 @@ router.get(
   async (req, res) => {
     try {
       const hours = parseInt(req.query.hours);
+      const hours2 = parseInt(req.query.hours2) || 0;
       const race = req.params.race.capitalize();
-      let rows = await games.getRaceBuildingStats(race, hours);
-      rows = rows.map(stats => {
+      let rows = await games.getRaceBuildingStats(race, hours, hours2);
+      rows = rows.map((stats) => {
         return {
           ...stats,
-          building: !stats.building ? "" : stats.building.slice(1, -1)
+          building: !stats.building ? "" : stats.building.slice(1, -1),
         };
       });
       res.status(200).json(rows);
@@ -62,12 +65,13 @@ router.get(
   async (req, res) => {
     try {
       const hours = parseInt(req.query.hours);
+      const hours2 = parseInt(req.query.hours2) || 0;
       const race = req.params.race.capitalize();
-      let rows = await games.getRaceFirstBuildingStats(race, hours);
-      rows = rows.map(stats => {
+      let rows = await games.getRaceFirstBuildingStats(race, hours, hours2);
+      rows = rows.map((stats) => {
         return {
           ...stats,
-          building: !stats.building ? "" : stats.building.slice(1, -1)
+          building: !stats.building ? "" : stats.building.slice(1, -1),
         };
       });
       res.status(200).json(rows);
