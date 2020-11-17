@@ -396,7 +396,7 @@ module.exports = {
         timeClause = `AND created_at >= NOW() - $3 * INTERVAL '1 HOURS'`;
       }
       const sql_query = `
-      WITH recent_games AS (SELECT * FROM games ${whereClause} ORDER BY created_at LIMIT $1 OFFSET $2)
+      WITH recent_games AS (SELECT * FROM games ${whereClause} ORDER BY created_at DESC LIMIT $1 OFFSET $2)
       SELECT 
         recent_games.*,
         array_agg('[' || round_number || ','|| race || ',' || team || ']') as races,
