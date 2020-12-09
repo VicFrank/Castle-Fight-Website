@@ -4,7 +4,7 @@
     :items="raceStats"
     :hide-default-footer="true"
     :must-sort="true"
-    items-per-page="11"
+    items-per-page="12"
   >
     <template v-slot:item.race="{ item }">
       <RaceLink v-bind:race="item.race"></RaceLink>
