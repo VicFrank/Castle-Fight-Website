@@ -236,7 +236,7 @@ module.exports = {
       throw error;
     }
   },
-  async findGamesBySteamID(steamID, limit = 1000, offset = 0) {
+  async findGamesBySteamID(steamID) {
     try {
       const sql_query = `
       WITH player_games AS (
@@ -246,7 +246,6 @@ module.exports = {
         JOIN players
         USING (player_id)
         WHERE players.steam_id = $1
-        LIMIT $2 OFFSET $3
       )
       SELECT *
       FROM (SELECT g.*, 
@@ -282,7 +281,7 @@ module.exports = {
       ) as e2 ON true
       ORDER BY created_at DESC;
       `;
-      const { rows } = await query(sql_query, [steamID, limit, offset]);
+      const { rows } = await query(sql_query, [steamID]);
       return rows;
     } catch (error) {
       throw error;
