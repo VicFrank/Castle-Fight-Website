@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS game_players (
   player_id INTEGER REFERENCES players (player_id) ON UPDATE CASCADE,
   CONSTRAINT game_players_pkey PRIMARY KEY (game_id, player_id)
 );
+CREATE INDEX idx_game_players_game_id ON game_players (game_id);
+CREATE INDEX idx_game_players_player_id ON game_players (player_id);
 
 CREATE TABLE IF NOT EXISTS rounds (
   game_id INTEGER REFERENCES games(game_id),
@@ -41,7 +43,7 @@ CREATE TABLE IF NOT EXISTS rounds (
   round_winner INT,
   duration INT
 );
-
+CREATE INDEX idx_rounds_game_id ON game_players (game_id);
 CREATE INDEX ix_rounds_game_id_round_number ON rounds (game_id, round_number);
 
 CREATE TYPE build_event AS (
@@ -62,5 +64,7 @@ CREATE TABLE IF NOT EXISTS round_players (
   build_order build_event []
 );
 
+CREATE INDEX ix_round_players_game_id ON round_players (game_id);
+CREATE INDEX ix_round_players_player_id ON round_players (player_id);
 CREATE INDEX ix_round_players_team ON round_players (team);
 CREATE INDEX ix_round_players_game_id_round_number ON round_players (game_id, round_number);
