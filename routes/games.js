@@ -3,12 +3,9 @@ const router = express.Router();
 const games = require("../db/games");
 const keys = require("../config/keys");
 const apicache = require("apicache");
-const redis = require("redis");
+let cache = apicache.middleware;
 
-let cacheWithRedis = apicache.options({ redisClient: redis.createClient() })
-  .middleware;
-
-router.get("/", cacheWithRedis("5 minutes"), async (req, res) => {
+router.get("/", cache("5 minutes"), async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 100;
     const offset = parseInt(req.query.offset) || 0;
@@ -48,7 +45,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/:gameid", cacheWithRedis("1 week"), async (req, res) => {
+router.get("/:gameid", cache("1 week"), async (req, res) => {
   try {
     const gameid = parseInt(req.params.gameid);
     const gameInfo = await games.findGameByID(gameid);
@@ -59,7 +56,7 @@ router.get("/:gameid", cacheWithRedis("1 week"), async (req, res) => {
   }
 });
 
-router.get("/:gameid/rounds", cacheWithRedis("1 week"), async (req, res) => {
+router.get("/:gameid/rounds", cache("1 week"), async (req, res) => {
   try {
     const gameid = parseInt(req.params.gameid);
     const gameInfo = await games.findRoundsByGameID(gameid);
@@ -70,59 +67,47 @@ router.get("/:gameid/rounds", cacheWithRedis("1 week"), async (req, res) => {
   }
 });
 
-router.get(
-  "/records/num_player_rounds",
-  cacheWithRedis("1 day"),
-  async (req, res) => {
-    try {
-      const hours = parseInt(req.query.hours);
-      let rows = await games.getNumPlayerRounds(hours);
-      res.status(200).json(rows);
-    } catch (error) {
-      console.log(error);
-      res.status(500).send({ message: "Server Error" });
-    }
+router.get("/records/num_player_rounds", cache("1 day"), async (req, res) => {
+  try {
+    const hours = parseInt(req.query.hours);
+    let rows = await games.getNumPlayerRounds(hours);
+    res.status(200).json(rows);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Server Error" });
   }
-);
+});
 
-router.get(
-  "/records/first_buildings",
-  cacheWithRedis("1 day"),
-  async (req, res) => {
-    try {
-      let gameInfo = await games.getFirstBuildingWinRates();
-      gameInfo = gameInfo.map(stats => {
-        return {
-          ...stats,
-          building: !stats.building ? "" : stats.building.slice(1, -1)
-        };
-      });
-      res.status(200).json(gameInfo);
-    } catch (error) {
-      console.log(error);
-      res.status(500).send({ message: "Server Error" });
-    }
+router.get("/records/first_buildings", cache("1 day"), async (req, res) => {
+  try {
+    let gameInfo = await games.getFirstBuildingWinRates();
+    gameInfo = gameInfo.map((stats) => {
+      return {
+        ...stats,
+        building: !stats.building ? "" : stats.building.slice(1, -1),
+      };
+    });
+    res.status(200).json(gameInfo);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Server Error" });
   }
-);
+});
 
-router.get(
-  "/records/all_buildings",
-  cacheWithRedis("1 day"),
-  async (req, res) => {
-    try {
-      let gameInfo = await games.getBuildingWinRates();
-      gameInfo = gameInfo.map(stats => {
-        return {
-          ...stats,
-          building: !stats.building ? "" : stats.building.slice(1, -1)
-        };
-      });
-      res.status(200).json(gameInfo);
-    } catch (error) {
-      console.log(error);
-      res.status(500).send({ message: "Server Error" });
-    }
+router.get("/records/all_buildings", cache("1 day"), async (req, res) => {
+  try {
+    let gameInfo = await games.getBuildingWinRates();
+    gameInfo = gameInfo.map((stats) => {
+      return {
+        ...stats,
+        building: !stats.building ? "" : stats.building.slice(1, -1),
+      };
+    });
+    res.status(200).json(gameInfo);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Server Error" });
   }
-);
+});
 
 module.exports = router;
