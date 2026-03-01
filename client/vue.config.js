@@ -9,4 +9,19 @@ module.exports = {
     },
   },
   transpileDependencies: ["vuetify"],
+  css: {
+    loaderOptions: {
+      sass: {
+        additionalData: "",
+        sassOptions: {
+          quietDeps: true,
+        },
+      },
+      scss: {
+        sassOptions: {
+          quietDeps: true,
+        },
+      },
+    },
+  },
 };
