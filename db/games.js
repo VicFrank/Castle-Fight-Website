@@ -372,7 +372,15 @@ module.exports = {
         USING (game_id)
         JOIN rounds r
         USING (round_number, game_id)
-      GROUP BY recent_games.game_id
+      GROUP BY
+        recent_games.game_id,
+        recent_games.winning_team,
+        recent_games.ranked,
+        recent_games.rounds_to_win,
+        recent_games.allow_bots,
+        recent_games.cheats_enabled,
+        recent_games.created_at,
+        recent_games.draft_mode
       ORDER BY recent_games.created_at DESC
       `;
       let result;
