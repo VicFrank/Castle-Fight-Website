@@ -264,7 +264,16 @@ module.exports = {
       JOIN players
       USING (player_id)
       WHERE players.steam_id = $1
-      GROUP BY g.game_id, rp.team
+      GROUP BY
+        g.game_id,
+        g.winning_team,
+        g.ranked,
+        g.rounds_to_win,
+        g.allow_bots,
+        g.cheats_enabled,
+        g.created_at,
+        g.draft_mode,
+        rp.team
       ORDER BY g.created_at DESC;
       `;
       const { rows } = await query(sql_query, [steamID]);
