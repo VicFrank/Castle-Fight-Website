@@ -1,8 +1,9 @@
 <template>
   <div>
     <v-navigation-drawer v-model="drawer" absolute temporary>
-      <v-list-item>
-        <v-btn text>Castle Fight</v-btn>
+      <v-list-item to="/">
+        <v-icon color="red darken-2" class="mr-2">mdi-chess-rook</v-icon>
+        <span class="home-title">Castle Fight</span>
       </v-list-item>
       <v-divider></v-divider>
       <v-text-field
@@ -19,11 +20,15 @@
       <v-list-item link to="/leaderboard">Leaderboard</v-list-item>
     </v-navigation-drawer>
     <v-app-bar>
-      <v-app-bar-nav-icon class="d-md-none" @click="drawer = !drawer"></v-app-bar-nav-icon>
+      <v-app-bar-nav-icon
+        class="d-md-none"
+        @click="drawer = !drawer"
+      ></v-app-bar-nav-icon>
 
-      <v-btn text to="/" class="mr-5">
-        <v-icon large color="red" left>mdi-chess-rook</v-icon>Castle Fight
-      </v-btn>
+      <router-link to="/" class="home-link mr-5">
+        <v-icon color="red darken-2" class="mr-1">mdi-chess-rook</v-icon>
+        <span class="home-title">Castle Fight</span>
+      </router-link>
 
       <v-text-field
         solo-inverted
@@ -49,17 +54,34 @@
 <script>
 export default {
   data: () => ({
-    drawer: null
+    drawer: null,
   }),
 
   methods: {
-    searchPlayers: function(e) {
+    searchPlayers: function (e) {
       const searchValue = e.target.value;
       this.$router.push({ path: "/search", query: { q: searchValue } });
-    }
-  }
+    },
+  },
 };
 </script>
 
-<style>
+<style scoped>
+.home-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none !important;
+}
+
+.home-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: white;
+}
+
+.home-link:hover .home-title {
+  color: #ef9a9a;
+}
 </style>

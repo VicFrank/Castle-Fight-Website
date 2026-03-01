@@ -10,7 +10,7 @@ router.get("/", async (req, res) => {
 
 router.get("/leaderboard", cache("5 minutes"), async (req, res) => {
   try {
-    const numPlayers = parseInt(req.query.limit) || 100;
+    const numPlayers = Math.min(parseInt(req.query.limit) || 100, 500);
     const leaderboard = await players.getLeaderboard(numPlayers);
     res.status(200).json(leaderboard);
   } catch (error) {

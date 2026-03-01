@@ -39,7 +39,8 @@ const poolValues = process.env.IS_PRODUCTION
 const pool = new Pool(poolValues);
 
 module.exports = {
+  pool,
   query: (text, params, callback) => {
     return pool.query(text, params);
-  }
+  },
 };

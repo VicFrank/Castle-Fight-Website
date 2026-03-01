@@ -1,73 +1,83 @@
 <template>
-  <div>
-    <div
-      v-bind:class="{
-        'west-color': gameInfo.winning_team == 2,
-        'east-color': gameInfo.winning_team == 3,
-      }"
-      class="display-2 match-result"
-      v-if="gameInfo.winning_team"
-    >
-      <template v-if="gameInfo.winning_team !== 4"
-        >{{ gameInfo.winning_team | intToTeam }} Victory</template
+  <v-container>
+    <v-skeleton-loader v-if="loading" type="article, table, table" />
+    <v-alert v-else-if="error" type="error" dense>{{ error }}</v-alert>
+    <div v-else>
+      <div
+        :class="{
+          'west-color': gameInfo.winning_team == 2,
+          'east-color': gameInfo.winning_team == 3,
+        }"
+        class="display-2 match-result"
+        v-if="gameInfo.winning_team"
       >
-      <template v-else>Draw</template>
-    </div>
-    <div v-else-if="!loading" class="display-2 match-result">Unfinished</div>
-    <div v-if="gameInfo.draft_mode" class="match-result">
-      {{ gameInfo.draft_mode }}
-    </div>
-    <div class="headline match-result">{{ getRoundResults(gameInfo) }}</div>
-    <div v-for="round in rounds" :key="round.round_number">
-      <div class="round-result">
-        Round {{ round.round_number }}:
-        <span
-          v-bind:class="{
-            'west-color': round.round_winner == 2,
-            'east-color': round.round_winner == 3,
-          }"
-          class="title"
+        <template v-if="gameInfo.winning_team !== 4"
+          >{{ gameInfo.winning_team | intToTeam }} Victory</template
         >
-          <template v-if="round.round_winner !== 4"
-            >{{ round.round_winner | intToTeam }} Victory</template
-          >
-          <template v-else>Draw</template>
-        </span>
+        <template v-else>Draw</template>
       </div>
-      <div class="west-color team-header">Western Forces</div>
-      <TeamScoreboard v-bind:players="round.players.west"></TeamScoreboard>
-      <div class="east-color team-header">Eastern Forces</div>
-      <TeamScoreboard v-bind:players="round.players.east"></TeamScoreboard>
+      <div v-else class="display-2 match-result">Unfinished</div>
+      <div v-if="gameInfo.draft_mode" class="match-result caption mt-1">
+        {{ gameInfo.draft_mode | draftMode }}
+      </div>
+      <div class="headline match-result mb-4">
+        {{ getRoundResults(gameInfo) }}
+      </div>
+
+      <v-card
+        v-for="round in rounds"
+        :key="round.round_number"
+        class="mb-4 pa-2"
+      >
+        <div class="round-result">
+          Round {{ round.round_number }}:
+          <span
+            :class="{
+              'west-color': round.round_winner == 2,
+              'east-color': round.round_winner == 3,
+            }"
+            class="title"
+          >
+            <template v-if="round.round_winner !== 4"
+              >{{ round.round_winner | intToTeam }} Victory</template
+            >
+            <template v-else>Draw</template>
+          </span>
+        </div>
+        <div class="west-color team-header">Western Forces</div>
+        <TeamScoreboard :players="round.players.west"></TeamScoreboard>
+        <div class="east-color team-header mt-3">Eastern Forces</div>
+        <TeamScoreboard :players="round.players.east"></TeamScoreboard>
+      </v-card>
     </div>
-  </div>
+  </v-container>
 </template>
 
 <script>
+import api from "../../api";
 import TeamScoreboard from "./TeamScoreboard";
-
-const API_URL = "/api/games";
-// const API_URL = "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/games"
 
 export default {
   name: "game",
   data: () => ({
-    error: "",
+    error: null,
     rounds: [],
     gameInfo: {},
     loading: true,
   }),
 
   mounted() {
-    fetch(`${API_URL}/${this.$route.params.game_id}/rounds`)
-      .then((res) => res.json())
-      .then((rounds) => {
+    const gameId = this.$route.params.game_id;
+    Promise.all([api.getGameRounds(gameId), api.getGame(gameId)])
+      .then(([rounds, gameInfo]) => {
         rounds.sort((a, b) => a.round_number - b.round_number);
         this.rounds = rounds;
-      });
-    fetch(`${API_URL}/${this.$route.params.game_id}`)
-      .then((res) => res.json())
-      .then((gameInfo) => {
         this.gameInfo = gameInfo;
+      })
+      .catch(() => {
+        this.error = "Failed to load game details.";
+      })
+      .finally(() => {
         this.loading = false;
       });
   },
@@ -95,15 +105,11 @@ export default {
       }
       return results;
     },
-    getImagePath(race) {
-      const parsedRace = race.toLowerCase().replace(/ /g, "_");
-      return require(`../../assets/races/${parsedRace}_full.png`);
-    },
   },
 };
 </script>
 
-<style>
+<style scoped>
 .match-result {
   text-align: center;
   text-shadow: 1px 1px 5px black;
@@ -128,24 +134,24 @@ export default {
   height: 36px;
 }
 
-td {
+::v-deep td {
   text-align: center;
   vertical-align: middle;
   padding: 0 8px;
 }
 
-a {
-  vertical-align: middle;
-  display: inline-block;
-  line-height: 0;
+::v-deep .player-column {
+  width: 250px;
+  text-align: left !important;
 }
 
-.race-column {
+::v-deep .race-column {
   width: 36px;
 }
 
-.player-column {
-  width: 250px;
-  text-align: left;
+::v-deep .build-order-column a {
+  vertical-align: middle;
+  display: inline-block;
+  line-height: 0;
 }
 </style>

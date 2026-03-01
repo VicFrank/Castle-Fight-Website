@@ -4,7 +4,7 @@
     :items="raceStats"
     :hide-default-footer="true"
     :must-sort="true"
-    items-per-page="12"
+    :items-per-page="12"
   >
     <template v-slot:item.race="{ item }">
       <RaceLink v-bind:race="item.race"></RaceLink>
@@ -36,8 +36,8 @@ export default {
   data: () => ({
     headers: [
       { text: "Race", value: "race" },
-      { text: "Pick Rate", value: "rounds", width: 300 },
-      { text: "Win Rate", value: "percentage", width: 300 },
+      { text: "Pick Rate", value: "rounds" },
+      { text: "Win Rate", value: "percentage" },
     ],
   }),
 
@@ -78,18 +78,17 @@ export default {
     getMinArray(arr, property) {
       return arr.reduce(
         (min, b) => Math.min(min, b[property]),
-        arr[0][property]
+        arr[0][property],
       );
     },
     getMaxArray(arr, property) {
       return arr.reduce(
         (max, b) => Math.max(max, b[property]),
-        arr[0][property]
+        arr[0][property],
       );
     },
   },
 };
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

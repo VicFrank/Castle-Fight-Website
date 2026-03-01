@@ -4,9 +4,9 @@ const games = require("../db/games");
 const apicache = require("apicache");
 let cache = apicache.middleware;
 
-String.prototype.capitalize = function () {
-  return this.charAt(0).toUpperCase() + this.slice(1);
-};
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 router.get("/", cache("1 day"), async (req, res) => {
   try {
@@ -24,7 +24,7 @@ router.get("/:race", cache("1 day"), async (req, res) => {
   try {
     const hours = parseInt(req.query.hours);
     const hours2 = parseInt(req.query.hours2) || 0;
-    const race = req.params.race.capitalize();
+    const race = capitalize(req.params.race);
     let rows = await games.getRaceStats(race, hours, hours2);
     res.status(200).json(rows);
   } catch (error) {
@@ -37,7 +37,7 @@ router.get("/:race/all_buildings", cache("1 day"), async (req, res) => {
   try {
     const hours = parseInt(req.query.hours);
     const hours2 = parseInt(req.query.hours2) || 0;
-    const race = req.params.race.capitalize();
+    const race = capitalize(req.params.race);
     let rows = await games.getRaceBuildingStats(race, hours, hours2);
     rows = rows.map((stats) => {
       return {
@@ -56,7 +56,7 @@ router.get("/:race/first_buildings", cache("1 day"), async (req, res) => {
   try {
     const hours = parseInt(req.query.hours);
     const hours2 = parseInt(req.query.hours2) || 0;
-    const race = req.params.race.capitalize();
+    const race = capitalize(req.params.race);
     let rows = await games.getRaceFirstBuildingStats(race, hours, hours2);
     rows = rows.map((stats) => {
       return {

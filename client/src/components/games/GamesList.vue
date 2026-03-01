@@ -12,37 +12,45 @@
         <tbody class="caption">
           <tr v-for="game in games" :key="game.game_id">
             <td>
-              <router-link :to="'/games/' + game.game_id">{{
-                game.game_id
-              }}</router-link>
-              <div class="subtextfont-weight-light">
+              <router-link :to="'/games/' + game.game_id"
+                >#{{ game.game_id }}</router-link
+              >
+              <div class="caption grey--text">
                 {{ game.created_at | dateFromNow }}
               </div>
             </td>
-            <td class="caption">
-              <div v-if="game.ranked">
-                <span v-if="game.ranked">Ranked</span>
-                <span v-else>Unranked</span>
-                <span v-if="game.allow_bots">Bots</span>
-                <span v-if="game.draft_mode">{{ game.draft_mode }}</span>
+            <td>
+              <div class="caption">
+                {{ game.ranked ? "Ranked" : "Unranked"
+                }}<span v-if="game.allow_bots"> · Bots</span
+                ><span v-if="game.draft_mode">
+                  · {{ game.draft_mode | draftMode }}</span
+                >
               </div>
-              {{ game.west_players }}v{{ game.east_players }}
+              <div class="caption grey--text">
+                {{ game.west_players }}v{{ game.east_players }}
+              </div>
             </td>
             <td>
-              <div
-                v-bind:class="{
-                  'west-color': game.winning_team == 2,
-                  'east-color': game.winning_team == 3,
-                }"
-                v-if="game.winning_team"
+              <v-chip
+                v-if="game.winning_team && game.winning_team !== 4"
+                x-small
+                :color="
+                  game.winning_team == 2 ? 'green darken-3' : 'red darken-3'
+                "
+                text-color="white"
+                >{{ game.winning_team | intToTeam }}</v-chip
               >
-                <template v-if="game.winning_team !== 4"
-                  >{{ game.winning_team | intToTeam }} Victory</template
-                >
-                <template v-else>Draw</template>
+              <v-chip
+                v-else-if="game.winning_team === 4"
+                x-small
+                color="grey darken-2"
+                >Draw</v-chip
+              >
+              <span v-else class="caption grey--text">—</span>
+              <div class="caption grey--text mt-1">
+                {{ getRoundResults(game) }}
               </div>
-              <div v-else>Unfinished</div>
-              <div>{{ getRoundResults(game) }}</div>
             </td>
           </tr>
         </tbody>
@@ -82,5 +90,4 @@ export default {
 };
 </script>
 
-<style>
-</style>
+<style></style>

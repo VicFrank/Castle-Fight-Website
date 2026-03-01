@@ -1,27 +1,35 @@
 <template>
-  <div>
+  <v-container>
     <h1>Races</h1>
-    <v-select :items="timeSelects" label="This Month" solo v-on:change="onTimeFilterSelected" dense></v-select>
-    <RaceStats v-bind:raceStats="races" v-bind:numRounds="numRounds"></RaceStats>
-  </div>
+    <v-select
+      :items="timeSelects"
+      label="This Month"
+      solo
+      dense
+      v-on:change="onTimeFilterSelected"
+      class="mt-2"
+    ></v-select>
+    <v-skeleton-loader v-if="loading" type="table" />
+    <v-alert v-else-if="error" type="error" dense>{{ error }}</v-alert>
+    <RaceStats v-else :raceStats="races" :numRounds="numRounds"></RaceStats>
+  </v-container>
 </template>
 
 <script>
-const API_URL = "/api";
-// const API_URL =
-// "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api";
+import api from "../../api";
 import RaceStats from "./RacesStats";
 
 export default {
   data: () => ({
-    error: "",
+    error: null,
+    loading: true,
     races: [],
     numRounds: 0,
-    timeSelects: ["This Month", "This Week", "Past 24 Hours"]
+    timeSelects: ["This Month", "This Week", "Past 24 Hours"],
   }),
 
   components: {
-    RaceStats
+    RaceStats,
   },
 
   mounted() {
@@ -30,15 +38,18 @@ export default {
 
   methods: {
     getContent(hours) {
-      fetch(`${API_URL}/races?hours=${hours}`)
-        .then(res => res.json())
-        .then(races => {
-          this.races = races.filter(race => race.race !== "Wisp");
-        });
-      fetch(`${API_URL}/games/records/num_player_rounds?hours=${hours}`)
-        .then(res => res.json())
-        .then(numRounds => {
+      this.loading = true;
+      this.error = null;
+      Promise.all([api.getRaces(hours), api.getNumPlayerRounds(hours)])
+        .then(([races, numRounds]) => {
+          this.races = races.filter((r) => r.race !== "Wisp");
           this.numRounds = parseInt(numRounds.count);
+        })
+        .catch(() => {
+          this.error = "Failed to load race data.";
+        })
+        .finally(() => {
+          this.loading = false;
         });
     },
     getHoursForLabel(label) {
@@ -52,12 +63,10 @@ export default {
       }
     },
     onTimeFilterSelected(label) {
-      const hours = this.getHoursForLabel(label);
-      this.getContent(hours);
-    }
-  }
+      this.getContent(this.getHoursForLabel(label));
+    },
+  },
 };
 </script>
 
-<style>
-</style>
+<style></style>

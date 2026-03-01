@@ -1,29 +1,33 @@
 <template>
   <v-app id="inspire">
     <Header></Header>
-    <div class="content">
-      <router-view></router-view>
-    </div>
+    <v-main>
+      <div class="content">
+        <router-view></router-view>
+      </div>
+    </v-main>
   </v-app>
 </template>
- 
+
 <script>
 import Header from "./components/Header";
 
 export default {
   name: "home",
   components: {
-    Header
+    Header,
   },
   created() {
     this.$vuetify.theme.dark = true;
-  }
+  },
 };
 </script>
- 
+
 <style>
 .content {
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 16px;
 }
 
 a {
@@ -31,20 +35,41 @@ a {
   color: #4fa8ef;
 }
 
+a:hover {
+  text-decoration: underline;
+}
+
 thead {
-  background-color: #4e403a;
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+thead th {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.5) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 .sortable {
   cursor: pointer;
 }
 
+tbody > tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
 tbody > tr:nth-child(even) {
-  background-color: #2e2724;
+  background-color: rgba(255, 255, 255, 0.02);
 }
 
 tbody > tr:nth-child(odd) {
-  background-color: #1d0e0e;
+  background-color: transparent;
+}
+
+tbody > tr:hover {
+  background-color: rgba(255, 255, 255, 0.07) !important;
 }
 
 .west-color {
@@ -53,5 +78,9 @@ tbody > tr:nth-child(odd) {
 
 .east-color {
   color: #f36e6e;
+}
+
+h1 {
+  margin-bottom: 12px;
 }
 </style>

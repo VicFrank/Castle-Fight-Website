@@ -1,64 +1,80 @@
 <template>
-  <div>
+  <v-container>
     <h1>Leaderboard</h1>
-    <table>
-      <thead>
-        <tr>
-          <th>Rank</th>
-          <th class="player">Player</th>
-          <th>MMR</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(player, index) in leaderboard" :key="player.steam_id">
-          <th class="rank">{{index + 1}}</th>
-          <th class="player" v-bind:style="{width: playerWidth, maxWidth: playerWidth}">
-            <router-link :to="'/players/' + player.steam_id">{{player.username}}</router-link>
-          </th>
-          <th class="mmr">{{player.mmr}}</th>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <v-skeleton-loader v-if="loading" type="table" />
+    <v-alert v-else-if="error" type="error" dense>{{ error }}</v-alert>
+    <v-card v-else outlined>
+      <v-simple-table>
+        <thead>
+          <tr>
+            <th class="rank">Rank</th>
+            <th class="player">Player</th>
+            <th class="mmr-col">MMR</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(player, index) in leaderboard" :key="player.steam_id">
+            <td class="rank">
+              <v-icon v-if="index === 0" small color="amber">mdi-trophy</v-icon>
+              <v-icon v-else-if="index === 1" small color="grey lighten-1"
+                >mdi-trophy</v-icon
+              >
+              <v-icon v-else-if="index === 2" small color="brown lighten-1"
+                >mdi-trophy</v-icon
+              >
+              <span v-else>{{ index + 1 }}</span>
+            </td>
+            <td class="player" :style="{ maxWidth: playerWidth }">
+              <router-link :to="'/players/' + player.steam_id">{{
+                player.username
+              }}</router-link>
+            </td>
+            <td class="mmr-col">{{ player.mmr }}</td>
+          </tr>
+        </tbody>
+      </v-simple-table>
+    </v-card>
+  </v-container>
 </template>
 
 <script>
-// const API_URL =
-// "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/leaderboard/";
-const API_URL = "/api/leaderboard/";
+import api from "../api";
 
 export default {
   name: "leaderboard",
   data: () => ({
-    error: "",
-    leaderboard: []
+    error: null,
+    loading: true,
+    leaderboard: [],
   }),
 
   mounted() {
-    fetch(API_URL)
-      .then(res => res.json())
-      .then(leaderboard => {
+    api
+      .getLeaderboard()
+      .then((leaderboard) => {
         this.leaderboard = leaderboard;
+      })
+      .catch(() => {
+        this.error = "Failed to load leaderboard.";
+      })
+      .finally(() => {
+        this.loading = false;
       });
   },
-  methods: {},
 
   computed: {
     playerWidth() {
       if (this.$vuetify.breakpoint.xsOnly) return "200px";
       else return "360px";
-    }
-  }
+    },
+  },
 };
 </script>
 
 <style scoped>
-table {
-  margin: "auto";
-}
-
 .rank {
-  width: 80px;
+  width: 60px;
+  text-align: center;
 }
 
 .player {
@@ -69,7 +85,7 @@ table {
   white-space: nowrap;
 }
 
-.mmr {
+.mmr-col {
   width: 100px;
 }
 </style>

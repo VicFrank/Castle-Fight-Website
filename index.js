@@ -1,24 +1,24 @@
 const express = require("express");
 const path = require("path");
-const serveStatic = require("serve-static");
+const cron = require("node-cron");
 
-const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const gamesRouter = require("./routes/games");
 const playersRouter = require("./routes/players");
 const racesRouter = require("./routes/races");
 const baseRouter = require("./routes/base");
+const seasonReset = require("./utility/seasonReset");
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(morgan("short"));
 
-app.use(bodyParser.json());
+app.use(express.json());
 app.use(
-  bodyParser.urlencoded({
-    extended: true
-  })
+  express.urlencoded({
+    extended: false,
+  }),
 );
 
 app.use(express.static(path.join(__dirname, "client/dist")));
@@ -34,4 +34,23 @@ app.get("*", (req, res) => {
 
 app.listen(port, () => {
   console.log(`App running on port ${port}.`);
+
+  // Check on startup whether a season reset is overdue
+  seasonReset
+    .runIfNeeded()
+    .catch((err) => console.error("[Season Reset] Startup check failed:", err));
 });
+
+// Check every night at midnight UTC whether a season reset is due.
+// runIfNeeded() is idempotent — it only resets once per 6-month period.
+cron.schedule(
+  "0 0 * * *",
+  () => {
+    seasonReset
+      .runIfNeeded()
+      .catch((err) =>
+        console.error("[Season Reset] Nightly check failed:", err),
+      );
+  },
+  { timezone: "UTC" },
+);

@@ -1,21 +1,33 @@
 <template>
-  <div>
+  <v-container>
     <h1>Recent Games</h1>
-    <GamesList v-bind:games="games"></GamesList>
-  </div>
+    <v-skeleton-loader v-if="loading" type="table" />
+    <v-alert v-else-if="error" type="error" dense>{{ error }}</v-alert>
+    <div v-else>
+      <GamesList :games="paginatedGames"></GamesList>
+      <div class="text-center mt-2" v-if="totalPages > 1">
+        <v-pagination
+          v-model="page"
+          :length="totalPages"
+          :total-visible="7"
+        ></v-pagination>
+      </div>
+    </div>
+  </v-container>
 </template>
 
 <script>
-const API_URL = "/api/games/";
-// const API_URL =
-// "https://cors-anywhere.herokuapp.com/https://dotacastlefight.com/api/games/";
+import api from "../../api";
 import GamesList from "./GamesList";
 
 export default {
   name: "games",
   data: () => ({
-    error: "",
+    error: null,
+    loading: true,
     games: [],
+    page: 1,
+    itemsPerPage: 25,
   }),
 
   components: {
@@ -23,51 +35,31 @@ export default {
   },
 
   mounted() {
-    fetch(API_URL)
-      .then((res) => res.json())
+    api
+      .getRecentGames()
       .then((games) => {
-        this.games = games;
+        this.games = games
+          .slice()
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      })
+      .catch(() => {
+        this.error = "Failed to load games.";
+      })
+      .finally(() => {
+        this.loading = false;
       });
-  },
-  methods: {
-    getTeamColor(teamNumber) {
-      switch (teamNumber) {
-        case 2:
-          return "green";
-        case 3:
-          return "red";
-        default:
-          return "white";
-      }
-    },
-    getRoundResults(game) {
-      const draws = game.draws;
-      let results = "";
-      switch (game.winning_team) {
-        case 2:
-          results = `${game.west_wins}-${game.east_wins}`;
-          break;
-        case 3:
-          results = `${game.east_wins}-${game.west_wins}`;
-          break;
-        default:
-          return "";
-      }
-      if (draws > 0) {
-        results = `${results}-${draws}`;
-      }
-      return results;
-    },
   },
 
   computed: {
-    playerWidth() {
-      if (this.$vuetify.breakpoint.xsOnly) return "200px";
-      else return "360px";
+    totalPages() {
+      return Math.ceil(this.games.length / this.itemsPerPage);
+    },
+    paginatedGames() {
+      const start = (this.page - 1) * this.itemsPerPage;
+      return this.games.slice(start, start + this.itemsPerPage);
     },
   },
 };
 </script>
 
-<style>
-</style>
+<style></style>

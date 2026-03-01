@@ -7,7 +7,7 @@ let cache = apicache.middleware;
 
 router.get("/", cache("5 minutes"), async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 100;
+    const limit = Math.min(parseInt(req.query.limit) || 100, 500);
     const offset = parseInt(req.query.offset) || 0;
     const pastHours = parseInt(req.query.hours);
     if (pastHours) {
@@ -31,7 +31,7 @@ router.post("/", async (req, res) => {
       ? keys.dedicatedServerKey
       : keys.toolsKey;
 
-    if (server_key != dedicatedServerKey) {
+    if (server_key !== dedicatedServerKey) {
       res.status(403).send({ message: `You are not authorized to add data` });
       return;
     }

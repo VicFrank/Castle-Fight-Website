@@ -1,8 +1,8 @@
 const probability = (winnerRating, loserRating) => {
-  probablity =
+  const prob =
     (1.0 * 1.0) /
     (1 + 1.0 * Math.pow(10, (1.0 * (loserRating - winnerRating)) / 400));
-  return probablity;
+  return prob;
 };
 
 module.exports = {
@@ -14,5 +14,5 @@ module.exports = {
     if (ratingChange === 0) return 1;
 
     return ratingChange;
-  }
+  },
 };

@@ -4,16 +4,6 @@ import vuetify from "./plugins/vuetify";
 import VueRouter from "vue-router";
 import moment from "moment";
 
-import Home from "./components/Home";
-import Games from "./components/games/Games";
-import Game from "./components/games/Game";
-import Races from "./components/races/Races";
-import Race from "./components/races/Race";
-import Player from "./components/players/Player";
-import Leaderboard from "./components/Leaderboard";
-import Building from "./components/buildings/Building";
-import Search from "./components/search/Search";
-
 Vue.config.productionTip = false;
 
 Vue.use(VueRouter);
@@ -21,54 +11,58 @@ Vue.use(VueRouter);
 const routes = [
   {
     path: "/",
-    component: Home
+    component: () => import("./components/Home"),
   },
   {
     path: "/games",
-    component: Games
+    component: () => import("./components/games/Games"),
   },
   {
     path: "/games/:game_id",
-    component: Game
+    component: () => import("./components/games/Game"),
   },
   {
     path: "/races",
-    component: Races
+    component: () => import("./components/races/Races"),
   },
   {
     path: "/races/:race",
-    component: Race
+    component: () => import("./components/races/Race"),
   },
   {
     path: "/leaderboard",
-    component: Leaderboard
+    component: () => import("./components/Leaderboard"),
   },
   {
     path: "/players/:steam_id",
-    component: Player
+    component: () => import("./components/players/Player"),
   },
   {
     path: "/buildings/:building_name",
-    component: Building
+    component: () => import("./components/buildings/Building"),
   },
   {
     path: "/search",
-    component: Search
-  }
+    component: () => import("./components/search/Search"),
+  },
+  {
+    path: "*",
+    component: () => import("./components/NotFound"),
+  },
 ];
 
 const router = new VueRouter({
   routes,
-  mode: "history"
+  mode: "history",
 });
 
-Vue.filter("dateFromNow", function(value) {
+Vue.filter("dateFromNow", function (value) {
   if (value) {
     return moment(String(value)).fromNow();
   }
 });
 
-Vue.filter("intToTeam", function(value) {
+Vue.filter("intToTeam", function (value) {
   if (value == 2) {
     return "West";
   } else if (value == 3) {
@@ -78,32 +72,32 @@ Vue.filter("intToTeam", function(value) {
   }
 });
 
-Vue.filter("trimBrackets", function(value) {
+Vue.filter("trimBrackets", function (value) {
   if (value) return value.replace(/\[|\]/g, "");
 });
 
-Vue.filter("trimFirstAndLast", function(value) {
+Vue.filter("trimFirstAndLast", function (value) {
   if (value) return value.slice(1, -1);
 });
 
-Vue.filter("underscoreToSpace", function(value) {
+Vue.filter("underscoreToSpace", function (value) {
   if (value) return value.replace(/_/g, " ");
 });
 
-Vue.filter("toNumber", function(value) {
+Vue.filter("toNumber", function (value) {
   if (value) return parseInt(value);
 });
 
-Vue.filter("capitalizeWords", function(value) {
+Vue.filter("capitalizeWords", function (value) {
   if (value) {
     var lower = String(value).toLowerCase();
-    return lower.replace(/(^| )(\w)/g, function(x) {
+    return lower.replace(/(^| )(\w)/g, function (x) {
       return x.toUpperCase();
     });
   }
 });
 
-Vue.filter("round", function(value, decimals) {
+Vue.filter("round", function (value, decimals) {
   if (!value) {
     value = 0;
   }
@@ -116,7 +110,7 @@ Vue.filter("round", function(value, decimals) {
   return value;
 });
 
-Vue.filter("percentage", function(value, decimals) {
+Vue.filter("percentage", function (value, decimals) {
   if (!value) {
     value = 0;
   }
@@ -131,8 +125,31 @@ Vue.filter("percentage", function(value, decimals) {
   return value;
 });
 
+Vue.filter("draftMode", function (value) {
+  switch (String(value)) {
+    case "1":
+      return "All Pick";
+    case "2":
+      return "Single Draft";
+    case "3":
+      return "All Random";
+    default:
+      return value;
+  }
+});
+
+Vue.filter("seasonDate", function (value) {
+  if (!value) return "";
+  const d = new Date(value);
+  return d.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+});
+
 new Vue({
   vuetify,
   router,
-  render: h => h(App)
+  render: (h) => h(App),
 }).$mount("#app");

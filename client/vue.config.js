@@ -2,11 +2,11 @@ module.exports = {
   devServer: {
     proxy: {
       "/api": {
-        target: "http://localhost:3000",
+        target: process.env.API_TARGET || "http://localhost:3000",
         changeOrigin: true,
-        ws: true
-      }
-    }
+        ws: true,
+      },
+    },
   },
-  transpileDependencies: ['vuetify'],
+  transpileDependencies: ["vuetify"],
 };

@@ -2,16 +2,17 @@ const express = require("express");
 const router = express.Router();
 const games = require("../db/games");
 const players = require("../db/players");
+const seasons = require("../db/seasons");
 const apicache = require("apicache");
 let cache = apicache.middleware;
 
-String.prototype.capitalize = function () {
-  return this.charAt(0).toUpperCase() + this.slice(1);
-};
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 router.get("/", cache("1 week"), async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 100;
+    const limit = Math.min(parseInt(req.query.limit) || 100, 500);
     const offset = parseInt(req.query.offset) || 0;
     const playersData = await players.getAllPlayers(limit, offset);
     res.status(200).json(playersData);
@@ -57,10 +58,10 @@ router.get("/:steamid/races", cache("5 minutes"), async (req, res) => {
 router.get("/:steamid/races/:race", async (req, res) => {
   try {
     const steamid = req.params.steamid;
-    const race = req.params.race.capitalize();
+    const race = capitalize(req.params.race);
     const firstBuildings = await players.getFirstBuildingCountsByRace(
       steamid,
-      race
+      race,
     );
     const allBuildings = await players.getBuildingCountsByRace(steamid, race);
     const numRounds = await players.getNumRoundsByRace(steamid, race);
@@ -117,6 +118,17 @@ router.get("/:steamid/buildings", cache("5 minutes"), async (req, res) => {
       }),
     };
     res.status(200).json(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Server Error" });
+  }
+});
+
+router.get("/:steamid/seasons", cache("1 hour"), async (req, res) => {
+  try {
+    const steamid = req.params.steamid;
+    const history = await seasons.getPlayerSeasonHistory(steamid);
+    res.status(200).json(history);
   } catch (error) {
     console.log(error);
     res.status(500).send({ message: "Server Error" });
