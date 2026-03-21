@@ -16,11 +16,13 @@
           </td>
           <td class="player-column">
             <template v-if="player.player_id">
-              <router-link :to="'/players/' + player.steam_id">{{player.username}}</router-link>
+              <router-link :to="'/players/' + player.steam_id">{{
+                player.username
+              }}</router-link>
             </template>
             <template v-else>Bot Player</template>
           </td>
-          <td>{{player.income}}</td>
+          <td style="width: 81px">{{ player.income }}</td>
           <td class="build-order-column">
             <span
               v-for="(buildEvent, index) in player.build_order"
@@ -44,22 +46,27 @@ import RaceLink from "../races/RaceLink";
 
 export default {
   props: {
-    players: Array
+    players: Array,
   },
 
   components: {
     BuildingLink,
-    RaceLink
-  }
+    RaceLink,
+  },
 };
 </script>
 
 <style>
+.race-column {
+  width: 96px;
+}
+
+.player-column {
+  width: 250px;
+  text-align: left !important;
+}
+
 .build-order-column {
-  text-align: left;
-  max-width: 420px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
+  text-align: left !important;
 }
 </style>
