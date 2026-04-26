@@ -28,7 +28,9 @@
             <span
               v-if="player.mmr_change != null"
               :class="player.mmr_change > 0 ? 'mmr-gain' : 'mmr-loss'"
-            >{{ player.mmr_change > 0 ? '+' : '' }}{{ player.mmr_change }}</span>
+              >{{ player.mmr_change > 0 ? "+" : ""
+              }}{{ player.mmr_change }}</span
+            >
             <span v-else class="mmr-unranked">—</span>
           </td>
           <td class="build-order-column">
