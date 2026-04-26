@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS round_players (
   units_killed INT,
   abandoned BOOLEAN,
   income INT,
+   mmr_change INT,
   build_order build_event []
 );
 

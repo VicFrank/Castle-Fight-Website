@@ -151,6 +151,12 @@ module.exports = {
                   WHERE player_id = $2`,
                   [mmrChange, playerPrimaryKey],
                 );
+                await query(
+                  `UPDATE round_players
+                  SET mmr_change = $1
+                  WHERE game_id = $2 AND player_id = $3 AND round_number = $4`,
+                  [mmrChange, gameID, playerPrimaryKey, roundNumber],
+                );
               }
             }
           }
