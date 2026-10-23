@@ -1,3 +1,7 @@
+Requirements
+
+- Node.js 24.22.1 or a later 24.x release (see [.nvmrc](./.nvmrc))
+
 Production
 
 - Commit and Push changes
